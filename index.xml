@@ -13,10 +13,10 @@
     
     <item>
       <title>Procedural macros in Rust</title>
-      <link>https://montekki.github.io/posts/my-first-post/</link>
+      <link>https://montekki.github.io/posts/procedural-macros-rust/</link>
       <pubDate>Sun, 24 Feb 2019 14:12:31 +0300</pubDate>
       
-      <guid>https://montekki.github.io/posts/my-first-post/</guid>
+      <guid>https://montekki.github.io/posts/procedural-macros-rust/</guid>
       <description>Metaprogramming in Rust Howdy ya&amp;rsquo;ll. Today we will be looking into the procedural macros toolset of the Rust programming language.
 Rust language provides us with two types of metaprogramming tools:
  declarative macros procedural macros  Features println! or vec! are implemented using declarative macros and features like derive traits are actually procedural macros.
