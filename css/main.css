@@ -95,6 +95,12 @@ footer {
     border-bottom: var(--border-width) solid var(--accent);
 }
 
+pre {
+	border-radius: 0;
+	padding: 0;
+	border: 0;
+}
+
 img {
     max-width: 100%;
 }
