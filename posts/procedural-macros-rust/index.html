@@ -177,10 +177,10 @@ Rust code as output.</p>
 <h2 id="procedural-macros">Procedural macros</h2>
 
 <p>Rust&rsquo;s provides with a basic example of using procedural macros for
-implementing a custome <code>derive</code> trait. Let&rsquo;s take a look at it with
+implementing a custom <code>derive</code> trait. Let&rsquo;s take a look at it with
 slight modifications.</p>
 
-<p>First off, we have a user of our marcos, that lives in the <code>user</code> repo
+<p>First off, we have a user of our macros, that lives in the <code>user</code> repo
 and has the following <code>src/main.rs</code>:</p>
 
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#66d9ef">extern</span> <span style="color:#66d9ef">crate</span> my_macro;
@@ -214,7 +214,7 @@ the <code>hello_macro()</code> function.</p>
 <p>To get the default implementation of this trait the procedural macro
 is defined. It lives in it&rsquo;s own crate inside the <code>my_macro</code>
 crate. By convention for a crate named <code>foo</code> the derive macro
-implementaion has to be called <code>foo_derive</code>, so our derive macro
+implementation has to be called <code>foo_derive</code>, so our derive macro
 crate is called <code>my_macro_derive</code>.</p>
 
 <p>The <code>my_macro_derive</code> crate has to be declared as a procedural macro
@@ -329,7 +329,7 @@ to <code>impl_hello_marco</code>. In fact, <code>syn::parse</code> is a template
 and it can parse <code>TokenStream</code> into any type that implements
 <code>syn::parse::Parse</code> trait.</li>
 <li><a href="https://docs.rs/syn/0.15.26/syn/struct.DeriveInput.html"><code>syn::DeriveInput</code></a>
-is used to get the name of the identificator that is stored into variable <code>name</code></li>
+is used to get the name of the identifier stored into variable <code>name</code></li>
 <li><code>name</code> variable is substituted in the contents of the <code>quote!</code> macro
 to get the final implementation of the <code>HelloMacro</code> trait.</li>
 </ul>
@@ -361,7 +361,7 @@ interpolated in the body of our <code>quote</code> macro.</p>
 <p>The code for this section can be found
 <a href="https://github.com/montekki/rust_metaprogramming/commit/1842a930fd8bdbc3da647a0bb15f2029665bafbb">here</a></p>
 
-<h2 id="implementing-a-simpe-serializer">Implementing a simpe serializer</h2>
+<h2 id="implementing-a-simple-serializer">Implementing a simple serializer</h2>
 
 <p>Now, suppose we wanted to implement a simple serializer with the help of
 procedural macros.</p>
@@ -512,7 +512,7 @@ with unnamed fields, over which we iterate collecting all the code together.</p>
 }
 </code></pre></div>
 
-<p>Here, we have brough in the <code>hexdump</code> crate for more infomative
+<p>Here, we have brought in the <code>hexdump</code> crate for more informative
 binary data output.</p>
 
 <p>When we finally run our code we will end up with the following output</p>
@@ -549,7 +549,7 @@ we will end up with the following error:</p>
 
 error: aborting due to previous err</code></pre></div>
 
-<p>We can make this error more infomative by using the <code>quote_spanned!</code> macro
+<p>We can make this error more informative by using the <code>quote_spanned!</code> macro
 instead of a regular <code>quote!</code>:</p>
 
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#66d9ef">let</span> rec <span style="color:#f92672">=</span> fields.unnamed.iter().enumerate().map(<span style="color:#f92672">|</span>(i, f)<span style="color:#f92672">|</span> {
