@@ -13,7 +13,7 @@ theme = "tale-zola"
 [markdown]
 # Whether to do syntax highlighting
 # Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
-highlight_code = false
+highlight_code = true 
 
 [extra]
 author = "Fedor Sakharov"
