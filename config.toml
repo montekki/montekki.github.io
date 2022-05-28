@@ -1,0 +1,29 @@
+# The URL the site will be built for
+base_url = "https://montekki.github.io "
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = false
+
+theme = "tale-zola"
+
+
+[markdown]
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = false
+
+[extra]
+author = "Fedor Sakharov"
+katex = true
+
+[[extra.menu]]
+name = "About"
+url = "/about"
+
+[extra.footer]
+start_year = "2022"
+end_year = "2022"
+info = ""

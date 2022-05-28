@@ -1,0 +1,12 @@
+[submodule "themes/archie-zola"]
+	path = themes/archie-zola
+	url = https://github.com/XXXMrG/archie-zola.git
+[submodule "themes/adidoks"]
+	path = themes/adidoks
+	url = https://github.com/aaranxu/adidoks.git
+[submodule "themes/emily_zola_theme"]
+	path = themes/emily_zola_theme
+	url = https://github.com/kyoheiu/emily_zola_theme.git
+[submodule "themes/tale-zola"]
+	path = themes/tale-zola
+	url = git@github.com:aaranxu/tale-zola.git
