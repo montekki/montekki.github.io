@@ -1,0 +1,54 @@
+@import '../themes/tale-zola/sass/tale/variables';
+@import '../themes/tale-zola/sass/tale/base';
+@import '_code.scss';
+@import '../themes/tale-zola/sass/tale/post';
+@import '../themes/tale-zola/sass/tale/footnote';
+@import '../themes/tale-zola/sass/tale/syntax';
+@import '../themes/tale-zola/sass/tale/layout';
+@import '../themes/tale-zola/sass/tale/pagination';
+@import '../themes/tale-zola/sass/tale/catalogue';
+@import '../themes/tale-zola/sass/tale/404';
+@import '../themes/tale-zola/sass/tale/tags';
+@import '../themes/tale-zola/sass/custom';
+
+:root {
+  /* Used for: block comment, hr, ... */
+  --border-color: #00000000;
+
+  /* Fonts */
+  --text-font: 'Space Grotesk';
+  --header-font: 'Space Grotesk';
+  --code-font: 'Jetbrains Mono';
+}
+
+html {
+  background-color: #00000000;
+  color: #00000000;
+  font-family: var(--text-font);
+  line-height: 1.6em;
+}
+
+.content {
+  max-width: 944px;
+  margin: 0 auto;
+  padding: 0 24px;
+  word-wrap: break-word;
+}
+
+@media all and (min-width:640px) {
+  html {
+    font-size: 16.5px;
+  }
+}
+
+@media all and (min-width:720px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+@media all and (min-width:960px) {
+  html {
+    font-size: 18px;
+  }
+}
