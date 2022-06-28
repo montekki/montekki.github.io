@@ -1,5 +1,7 @@
 {% extends "tale-zola/templates/index.html" %}
 
+{% import "post-preview.html" as post_macros %}
+
 {% if page.extra.katex or section.extra.katex or config.extra.katex %}
   {% include 'templates/katex.html' %}
 {% endif %}
@@ -16,7 +18,7 @@
 
             <ul>
             {% for post in posts %}
-                <li><a href="{{ post.permalink }}">{{ post.title }}</a></li>
+                {{ post_macros::post_preview(post=post) }}
             {% endfor %}
             </ul>
         {% endfor %}
