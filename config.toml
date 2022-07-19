@@ -22,7 +22,7 @@ katex = true
 
 [[extra.menu]]
 name = "Blog"
-url = "blog"
+url = ""
 
 [[extra.menu]]
 name = "Tags"

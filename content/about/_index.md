@@ -1,13 +1,9 @@
 +++
-title = "About"
 template = "about/section.html"
 
 [extra]
 katex = true
 +++
 
-Hello world.
-
-$$
- \varphi = 1+\frac{1} {1+\frac{1} {1+\frac{1} {1+\cdots} } } 
-$$
+Hi there! I am a software developer and I am publishing content
+here mostly as notes to myself on topics I am interested in.
