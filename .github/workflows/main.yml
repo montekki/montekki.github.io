@@ -15,3 +15,13 @@ jobs:
           PAGES_BRANCH: gh-pages
           # Provide personal access token
           TOKEN: ${{ secrets.TOKEN }}
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install aspell
+        run: sudo apt-get install aspell
+
+      - name: Spellcheck
+        run: bash ci/spellcheck.sh list
