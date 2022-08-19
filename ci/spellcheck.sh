@@ -36,8 +36,8 @@ aspell --version
 shopt -s nullglob
 
 dict_filename=./ci/dictionary.txt
-markdown_sources=$(find ./content -name "*.md")
-echo "checking sources $markdown_sources"
+markdown_sources=(`find ./content -name "*.md"`)
+echo "checking sources ${markdown_sources[@]}"
 mode="check"
 
 # aspell repeatedly modifies the personal dictionary for some reason,
@@ -63,7 +63,7 @@ if [[ ! -f "$dict_filename" ]]; then
     echo "Please check that it doesn't contain any misspellings."
 
     echo "personal_ws-1.1 en 0 utf-8" > "$dict_filename"
-    cat "${markdown_sources[@]}" | aspell --ignore 3 list | sort -u >> "$dict_filename"
+    cat "${markdown_sources[@]}" | aspell -M --ignore 3 list | sort -u >> "$dict_filename"
 elif [[ "$mode" == "list" ]]; then
     # List (default) mode: scan all files, report errors.
     declare -i retval=0
@@ -76,7 +76,7 @@ elif [[ "$mode" == "list" ]]; then
     fi
 
     for fname in "${markdown_sources[@]}"; do
-        command=$(aspell --ignore 3 --personal="$dict_path" "$mode" < "$fname")
+        command=$(aspell -M --ignore 3 --personal="$dict_path" "$mode" < "$fname")
         if [[ -n "$command" ]]; then
             for error in $command; do
                 # FIXME: find more correct way to get line number
@@ -98,6 +98,6 @@ elif [[ "$mode" == "check" ]]; then
     fi
 
     for fname in "${markdown_sources[@]}"; do
-        aspell --ignore 3 --dont-backup --personal="$dict_path" "$mode" "$fname"
+        aspell -M --ignore 3 --dont-backup --personal="$dict_path" "$mode" "$fname"
     done
 fi
