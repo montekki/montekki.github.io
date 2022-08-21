@@ -28,3 +28,13 @@ katex
 dimensionality
 univariate
 asymptotics
+widetilde
+iterable
+subslices
+typesafely
+boolean
+frac
+Leftrightarrow
+multilinear
+mult
+unelegant
