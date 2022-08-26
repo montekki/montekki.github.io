@@ -40,3 +40,4 @@ mult
 unelegant
 bitmasking
 changeset
+changelog
