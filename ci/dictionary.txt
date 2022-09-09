@@ -37,7 +37,12 @@ frac
 Leftrightarrow
 multilinear
 mult
+pazk
+pseudocode
 unelegant
 bitmasking
 changeset
-changelog
+Changelog
+MatMult
+SumCheck
+Benchmarking
