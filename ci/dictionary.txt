@@ -24,6 +24,7 @@ struct
 endian
 cdots
 prover's
+Provers
 katex
 dimensionality
 univariate
