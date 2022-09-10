@@ -24,6 +24,7 @@ struct
 endian
 cdots
 prover's
+Provers
 katex
 dimensionality
 univariate
@@ -37,7 +38,12 @@ frac
 Leftrightarrow
 multilinear
 mult
+pazk
+pseudocode
 unelegant
 bitmasking
 changeset
-changelog
+Changelog
+MatMult
+SumCheck
+Benchmarking
