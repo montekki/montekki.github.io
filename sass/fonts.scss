@@ -5,3 +5,35 @@
   src: url('./fonts/JetbrainsMono/fonts/ttf/JetBrainsMono-Regular.ttf'), local('ttf');
   font-display: swap;
 }
+
+@font-face {
+  font-family: 'Unbounded-Regular';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./assets/Unbounded-Regular.ttf'), local('ttf');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Unbounded-Bold';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./assets/Unbounded-Bold.ttf'), local('ttf');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Unbounded-Black';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./assets/Unbounded-Black.ttf'), local('ttf');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Unbounded-Medium';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./assets/Unbounded-Medium.ttf'), local('ttf');
+  font-display: swap;
+}
