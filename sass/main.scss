@@ -1,6 +1,7 @@
 @import '../themes/tale-zola/sass/tale/variables';
 @import '../themes/tale-zola/sass/tale/base';
 @import '_code.scss';
+@import 'fonts.css';
 @import '../themes/tale-zola/sass/tale/post';
 @import '../themes/tale-zola/sass/tale/footnote';
 @import '../themes/tale-zola/sass/tale/syntax';
@@ -33,6 +34,54 @@ html {
   margin: 0 auto;
   padding: 0 24px;
   word-wrap: break-word;
+}
+
+.post-title {
+  font-family: "Unbounded-Bold";
+  font-size: 30px;
+}
+
+h1 {
+  font-family: "Unbounded-Medium";
+  font-size: 25px;
+}
+
+h2 {
+  font-family: "Unbounded-Medium";
+  font-size: 25px;
+}
+
+.catalogue-title {
+  font-family: "Unbounded-Bold";
+  font-size: 30px;
+}
+
+.catalogue-time {
+  font-family: "Unbounded-Regular";
+}
+
+.nav a {
+  font-family: "Unbounded-Medium";
+}
+
+.pagination .top {
+  font-family: "Unbounded-Medium";
+}
+
+.tags-header-title {
+  font-family: "Unbounded-Bold";
+  font-size: 25px;
+}
+
+.tags-item-label a {
+  font-family: "Unbounded-Bold";
+  font-size: 20px;
+}
+
+
+
+footer {
+  font-family: "Unbounded-Medium";
 }
 
 .post-preview {
