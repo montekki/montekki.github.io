@@ -39,6 +39,15 @@ html {
 .post-title {
   font-family: "Unbounded-Bold";
   font-size: 30px;
+  text-align: left;
+}
+
+.post-line {
+  margin: {
+    top:1rem;
+    bottom:1rem;
+    left:1rem;
+  }
 }
 
 h1 {
