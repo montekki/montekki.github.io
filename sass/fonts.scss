@@ -7,6 +7,14 @@
 }
 
 @font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./assets/Inter-Regular.ttf'), local('ttf');
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Unbounded-Regular';
   font-style: normal;
   font-weight: 400;

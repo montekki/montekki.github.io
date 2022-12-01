@@ -17,15 +17,15 @@
   --border-color: #00000000;
 
   /* Fonts */
-  --text-font: 'Space Grotesk';
-  --header-font: 'Space Grotesk';
+  --text-font: 'Inter';
+  --header-font: 'Inter';
   --code-font: 'Jetbrains Mono';
 }
 
 html {
   background-color: #00000000;
   color: #00000000;
-  font-family: var(--text-font);
+  font-family: 'Inter';
   line-height: 1.6em;
 }
 
