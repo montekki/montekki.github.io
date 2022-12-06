@@ -47,3 +47,10 @@ Changelog
 MatMult
 SumCheck
 Benchmarking
+Shafi
+Goldwasser
+Yael
+Kalai
+tiplied
+Rothblum
+getter
