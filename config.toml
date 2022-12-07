@@ -2,6 +2,8 @@ base_url = "https://montekki.github.io"
 
 compile_sass = true
 
+generate_feed = true
+
 build_search_index = false
 
 title = ""
