@@ -12,6 +12,9 @@
 @import '../themes/tale-zola/sass/tale/tags';
 @import '../themes/tale-zola/sass/custom';
 
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap");
+@import url("https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css");
+
 :root {
   /* Used for: block comment, hr, ... */
   --border-color: #00000000;
