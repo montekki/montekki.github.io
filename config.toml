@@ -34,7 +34,13 @@ url = "tags"
 name = "About"
 url = "about"
 
-[[extra.seo.twitter]]
+[extra.seo]
+image = "assets/favicon.jpg"
+image_height = 0 
+image_width = 0
+og_locale = "en_US"
+
+[extra.seo.twitter]
 site = "m0nt3kk1"
 creator = "m0nt3kk1"
 
