@@ -18,6 +18,8 @@ highlight_theme = "base16-atelierdune-light"
 
 [extra]
 author = "Fedor Sakharov"
+github = "https://github.com/montekki"
+email = "fedor.sakharov@gmail.com"
 katex = true
 
 [[extra.menu]]
@@ -31,6 +33,10 @@ url = "tags"
 [[extra.menu]]
 name = "About"
 url = "about"
+
+[[extra.seo.twitter]]
+site = "m0nt3kk1"
+creator = "m0nt3kk1"
 
 [extra.footer]
 start_year = "2022"
