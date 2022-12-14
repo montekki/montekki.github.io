@@ -1,7 +1,6 @@
 @import '../themes/tale-zola/sass/tale/variables';
 @import '../themes/tale-zola/sass/tale/base';
 @import '_code.scss';
-@import 'fonts.css';
 @import '../themes/tale-zola/sass/tale/post';
 @import '../themes/tale-zola/sass/tale/footnote';
 @import '../themes/tale-zola/sass/tale/syntax';
@@ -13,6 +12,7 @@
 @import '../themes/tale-zola/sass/custom';
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700;900&display=swap");
 @import url("https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css");
 
 :root {
@@ -40,13 +40,15 @@ html {
 }
 
 .post-title {
-  font-family: "Unbounded-Bold";
+  font-family: "Unbounded";
+  font-weight: bold;
   font-size: 30px;
   text-align: left;
 }
 
 .post-info {
-  font-family: "Unbounded-Regular";
+  font-family: "Unbounded";
+  font-weight: normal;
   text-align: left;
 }
 
@@ -59,46 +61,50 @@ html {
 }
 
 h1 {
-  font-family: "Unbounded-Medium";
+  font-family: "Unbounded";
   font-size: 25px;
 }
 
 h2 {
-  font-family: "Unbounded-Medium";
+  font-family: "Unbounded";
   font-size: 25px;
 }
 
 .catalogue-title {
-  font-family: "Unbounded-Bold";
+  font-family: "Unbounded";
+  font-weight: bold;
   font-size: 30px;
 }
 
 .catalogue-time {
-  font-family: "Unbounded-Regular";
+  font-family: "Unbounded";
 }
 
 .nav a {
-  font-family: "Unbounded-Medium";
+  font-family: "Unbounded";
 }
 
 .pagination .top {
-  font-family: "Unbounded-Medium";
+  font-family: "Unbounded";
 }
 
 .tags-header-title {
-  font-family: "Unbounded-Bold";
+  font-family: "Unbounded";
+  font-weight: bold;
   font-size: 25px;
 }
 
 .tags-item-label a {
-  font-family: "Unbounded-Bold";
+  font-family: "Unbounded";
+  font-weight: bold;
   font-size: 20px;
 }
 
 
 
 footer {
-  font-family: "Unbounded-Medium";
+  font-family: "Unbounded";
+  font-weight: normal;
 }
 
 .post-preview {
