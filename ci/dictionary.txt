@@ -71,3 +71,15 @@ untrusted
 ZKDocs
 PlonK
 Girault
+Merkle
+Chiesa
+merkle
+config
+textit
+blockchain
+merkelize
+merkelizing
+hasher
+alessandro
+handwavy
+satisfiability
