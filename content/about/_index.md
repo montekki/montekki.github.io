@@ -12,4 +12,4 @@ You can contact me at
 [telegram](https://t.me/theo_montekki)
 or
 [mail](mailto:fedor.sakharov@gmail.com).
-My up to date CV can be found [here](../fedor_sakharov_cv.pdf)
+My up to date CV can be found [here](../fedor_sakharov_cv.pdf).
