@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+<title>Implementing Sum Check protocol in Rust</title>
+
+
+
+<meta property="og:title" content="Implementing Sum Check protocol in Rust">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+
+
+<link rel="canonical" href="https://montekki.github.io/thaler-ch4-1/">
+<meta property="og:url" content="https://montekki.github.io/thaler-ch4-1/">
+
+
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+  
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2022-07-06T00:00:00+00:00">
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image"">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+
+
+
+  <meta property="twitter:title" content="Implementing Sum Check protocol in Rust">
+
+
+
+  <meta name="twitter:site" content="@m0nt3kk1">
+  
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "author": {
+    "@type":"Person",
+	  "name":"Fedor Sakharov"
+  },
+  "description": "",
+  "url": "https://montekki.github.io/thaler-ch4-1/",
+  "@context":"https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Implementing Sum Check protocol in Rust"
+  
+    
+    
+      "datePublished":"2022-07-06T00:00:00+00:00",
+    
+    ,
+    "mainEntityOfPage":{
+      "@type":"WebPage",
+      "@id":"https://montekki.github.io/thaler-ch4-1/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+                                                                                                                                                                                                            <script>
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title"></h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2022-07-06">July  6, 2022</time>
+  	</div>
+  	<h1 class="post-title">Implementing Sum Check protocol in Rust</h1>
+  	<div class="post-line"></div>
+  	<p>This post is going go into reading the Sum Check protocol from the book
+and discussing a naive implementation of the described protocol in Rust.
+Again as in <a href="https://montekki.github.io/thaler-ch3/">previous post</a> the main goal of the
+post is going to be so to speak "gluing" together the math text
+and the implementation in software.</p>
+<span id="continue-reading"></span><h1 id="the-sum-check-protocol">The Sum-Check protocol</h1>
+<p>Let's take a look at what Sum-Check protocol is and how it can be implemented. From the book:</p>
+<blockquote>
+<p>Suppose we are given a $\nu$-variate polynomial $g$ defined over a finite field $\mathbb{F}$.
+The purpose of the sum-check protocol is for prover to provide the verifier with the following
+sum:</p>
+<p>$$
+H := \sum_{b_1 \in \lbrace 0, 1 \rbrace } \sum_{b_2 \in \lbrace 0,1 \rbrace } \cdots
+\sum_{b_{\nu} \in \lbrace 0, 1 \rbrace } g(b_1,\dots,b_{\nu}).
+$$</p>
+</blockquote>
+<blockquote>
+<p>Both the Verifier and the Prover can directly compute $H$ directly by evaluating
+$H$ by evaluating $g$ over $2^\nu$ inputs (namely, all inputs in $\lbrace 0, 1 \rbrace^\nu$).
+Using the Sum-Check protocol the verifier's runtime will be</p>
+<p>$$
+\mathcal{O}(\nu + [\text{the cost to evaluate } g \text{ at a single input } \mathbb{F}^\nu])
+$$</p>
+</blockquote>
+<p>For the full protocol description (actually multiple descriptions: in recursive and in iterative
+forms) it would be best to check the book text so here it will be truncated to the points
+relevant to the implementation.</p>
+<p>The protocol happens in steps and on each step Prover sends univariate polynomials of the form</p>
+<blockquote>
+<p>$$
+\sum_{(x_{j+1},...,x_{\nu}) \in \lbrace 0,1 \rbrace^{\nu - j}}
+g(r_1,\dots,r_{j-1},X_j,x_{j+1},\dots,x_{\nu})
+$$</p>
+</blockquote>
+<p>As you can see what this does it turns the polynomial multivariate polynomial $H$
+into a univariate polynomial of variable $X_j$ by</p>
+<ul>
+<li>fixing variables $X_1,\dots,X_{j-1}$ to constant values $r_1,\dots,r_{j - 1}$ and</li>
+<li>summing the resulting multivariate polynomial over a Boolean hypercube of values of
+$X_{j+1},\dots,X_{\nu}$</li>
+</ul>
+<h1 id="implementing-the-building-blocks-in-rust">Implementing the building blocks in Rust</h1>
+<p>The above vague description of the Sum Check protocol as well as the original description
+from the book give us several ideas which building blocks may go into the final implementation.
+As before the <a href="https://arkworks.rs">arkworks-rs</a> framework is going to be used.
+It is worth noting that this framework has an implementation of the
+<a href="https://github.com/arkworks-rs/sumcheck">Sum Check protocol</a>.</p>
+<h2 id="boolean-hypercube-of-mathbb-f-n-in-rust">Boolean hypercube of $\mathbb{F}^n$ in Rust</h2>
+<p>The evaluation of $H$ as well as evaluations of the polynomials of each step of the
+protocol involve iterating over a Boolean hypercube ( $ \forall x \in \lbrace 0, 1 \rbrace  ^n$)
+of some size $n$. It would be convenient to have an utility iterator to do exactly that.</p>
+<p>For any software developer a quick example of a hypercube would immediately come to mind: all
+possible values of some fixed-size integer variable in binary form. As such for <code>u8</code> such values
+start from <code>0</code> and end with <code>255</code> or <code>0..0</code> and <code>1..1</code> respectively. Everyone knows the
+asymptotics of the number of such possible values depending on the size: at the moment
+common operating systems use <code>u64</code> variables can address $2^{64}$ bytes of memory which is
+more than enough for modern machines.</p>
+<p>If we could iterate over the values of a variable of fixed size and then <code>.map()</code> these
+values from bits to ${0, 1} \in \mathbb{F}$ that would be the easiest thing to do.
+Crate <a href="https://crates.io/crates/bitvec">bitvec</a> has a primitive that would allow us
+to do just that.</p>
+<p>Lets create a struct that knows the dimensionality of the hypercube it needs
+to iterate over and also the current position within this cube:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">pub struct </span><span>BooleanHypercube&lt;F: Field&gt; {
+</span><span>    </span><span style="color:#d73737;">n</span><span>: </span><span style="color:#b854d4;">u32</span><span>,
+</span><span>    </span><span style="color:#d73737;">current</span><span>: </span><span style="color:#b854d4;">u64</span><span>,
+</span><span>    </span><span style="color:#d73737;">__f</span><span>: PhantomData&lt;F&gt;,
+</span><span>}
+</span></code></pre>
+<p>None that this struct is generic over the type of the field $\mathbb{F}$.</p>
+<p>Now to the <code>Iterator</code> implementation:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">impl</span><span>&lt;F: Field&gt; Iterator </span><span style="color:#b854d4;">for </span><span>BooleanHypercube&lt;F&gt; {
+</span><span>    </span><span style="color:#b854d4;">type </span><span>Item = Vec&lt;F&gt;;
+</span><span>
+</span><span>    </span><span style="color:#b854d4;">fn </span><span style="color:#6684e1;">next</span><span>(&amp;</span><span style="color:#b854d4;">mut </span><span style="color:#d73737;">self</span><span>) -&gt; Option&lt;</span><span style="color:#b854d4;">Self::</span><span>Item&gt; {
+</span><span>        </span><span style="color:#b854d4;">if </span><span style="color:#d73737;">self</span><span>.current == </span><span style="color:#b65611;">2</span><span style="color:#b854d4;">u64</span><span>.</span><span style="color:#1fad83;">pow</span><span>(</span><span style="color:#d73737;">self</span><span>.n) {
+</span><span>            None
+</span><span>        } </span><span style="color:#b854d4;">else </span><span>{
+</span><span>            </span><span style="color:#b854d4;">let</span><span> vec = </span><span style="color:#d73737;">self</span><span>.current.</span><span style="color:#1fad83;">to_le_bytes</span><span>();
+</span><span>            </span><span style="color:#b854d4;">let</span><span> s: &amp;BitSlice&lt;</span><span style="color:#b854d4;">u8</span><span>&gt; = BitSlice::try_from_slice(&amp;vec).</span><span style="color:#1fad83;">unwrap</span><span>();
+</span><span>            </span><span style="color:#d73737;">self</span><span>.current += </span><span style="color:#b65611;">1</span><span>;
+</span><span>
+</span><span>            Some(
+</span><span>                s.</span><span style="color:#1fad83;">iter</span><span>()
+</span><span>                    .</span><span style="color:#1fad83;">take</span><span>(</span><span style="color:#d73737;">self</span><span>.n as </span><span style="color:#b854d4;">usize</span><span>)
+</span><span>                    .</span><span style="color:#1fad83;">map</span><span>(|</span><span style="color:#d73737;">f</span><span>| </span><span style="color:#b854d4;">match </span><span>*f {
+</span><span>                        </span><span style="color:#b65611;">false </span><span>=&gt; F::zero(),
+</span><span>                        </span><span style="color:#b65611;">true </span><span>=&gt; F::one(),
+</span><span>                    })
+</span><span>                    .</span><span style="color:#1fad83;">collect</span><span>(),
+</span><span>            )
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>As you can see the <code>current</code> counter is turned into a Little Endian <code>[u8]</code> slice of bytes
+and the <code>bitvec</code>'s <code>BitSlice</code> is used to iterate over the bits of the value.
+This iterator will always contain the fixed number of bytes since there is a fixed number of
+bytes in <code>u32</code> so the first <code>n</code> have to be <code>.take()</code>-en. Then the values are mapped from
+<code>bool</code> values to $\lbrace 0, 1 \rbrace \in \mathbb{F}$ and collected into a final vector
+that is returned to the caller.</p>
+<h2 id="partially-computing-multivariate-polynomials-into-a-univariate-ones">Partially computing multivariate polynomials into a univariate ones</h2>
+<p>Another part of the protocol is the reduction of a multivariate polynomial
+into a univariate one by fixing all but one variables. In other words, for instance
+by fixing $r_1,\dots,r_{j-1}$ and $x_{j+1},\dots,x_\nu$ a multivariate polynomial
+$g(X_1,\dots,X_\nu)$ is going to be reduced to a univariate one
+$g(r_1,\dots,r_{j-1},X_j,x_{j+1},\dots,x_\nu)$. This can be done by substituting
+variables with their fixed values in every term of the original multivariate polynomial.</p>
+<p>The trait <code>DenseMVPolynomial&lt;F: Field&gt;</code> describes the interface of the multivariate
+polynomials in <code>ark_poly</code>. I allows to get the terms of the underlying polynomial
+by calling <code>.terms()</code> on it which would return a sequence of type <code>(F, Self::Term)</code>.</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">pub trait </span><span>DenseMVPolynomial&lt;F: Field&gt;: Polynomial&lt;F&gt; {
+</span><span>    </span><span style="color:#b854d4;">type </span><span>Term: multivariate::Term;
+</span><span>
+</span><span>    </span><span style="color:#b854d4;">fn </span><span style="color:#6684e1;">terms</span><span>(&amp;</span><span style="color:#d73737;">self</span><span>) -&gt; &amp;[(F, </span><span style="color:#b854d4;">Self</span><span>::Term)];
+</span></code></pre>
+<p>The associated type <code>Term</code> on this trait is bound by the <code>multivariate::Term</code> trait
+that requires it to have an <code>evaluate</code> method for evaluating at some point.</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">pub trait </span><span>Term {
+</span><span>    </span><span style="color:#b854d4;">fn </span><span style="color:#6684e1;">evaluate</span><span>&lt;F: Field&gt;(&amp;</span><span style="color:#d73737;">self</span><span>, </span><span style="color:#d73737;">p</span><span>: &amp;[F]) -&gt; F;
+</span></code></pre>
+<p>So this gives us the idea of the implementation:
+evaluate each term in our polynomial $g$ at a point $(r_1,\dots,r_{j-1},1,x_{j+1},\dots,x_\nu)$,
+multiply this evaluation by $X_j^t$ where $t$ is the degree of $X_j$ in this term, add the results
+together.</p>
+<p>For example consider this polynomial $g$ over $\mathbb{F}_5$:</p>
+<p>$$
+g(X_1, X_2, X_3) := X_1 X_2^2 + X_3
+$$</p>
+<p>to turn it into the univariate over $X_2$ with fixed $X_1 = 2$, $X_3 = 1$:</p>
+<p>$$
+g(2, X_2, 1) = \underbrace{ 2 }_{X_1 X_2^2 \text { evaluated at } \lbrace 2, 1, 1 \rbrace }
+X_2^2 + \underbrace{1}_{X_3 \text{ evaluated at } \lbrace 2, 1, 1 \rbrace } \equiv 2X_2^2 + 1
+$$</p>
+<p>So with that the code doing that is following:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">fn </span><span style="color:#6684e1;">to_univariate_polynomial_at_x_j</span><span>&lt;F: Field, P: DenseMVPolynomial&lt;F&gt;&gt;(
+</span><span>    </span><span style="color:#d73737;">p</span><span>: &amp;P,
+</span><span>    </span><span style="color:#d73737;">i</span><span>: </span><span style="color:#b854d4;">usize</span><span>,
+</span><span>    </span><span style="color:#d73737;">at</span><span>: &amp;[F],
+</span><span>) -&gt; univariate::SparsePolynomial&lt;F&gt; {
+</span><span>    </span><span style="color:#b854d4;">let mut</span><span> res = univariate::SparsePolynomial::zero();
+</span><span>    </span><span style="color:#b854d4;">let mut</span><span> at_temp = at.</span><span style="color:#1fad83;">to_vec</span><span>();
+</span><span>    at_temp[i] = F::one();
+</span><span>
+</span><span>    </span><span style="color:#b854d4;">for </span><span>(coeff, term) in p.</span><span style="color:#1fad83;">terms</span><span>() {
+</span><span>        </span><span style="color:#b854d4;">let</span><span> eval = term.</span><span style="color:#1fad83;">evaluate</span><span>(&amp;at_temp);
+</span><span>        </span><span style="color:#b854d4;">let</span><span> power = </span><span style="color:#b854d4;">match</span><span> term
+</span><span>            .</span><span style="color:#1fad83;">vars</span><span>()
+</span><span>            .</span><span style="color:#1fad83;">iter</span><span>()
+</span><span>            .</span><span style="color:#1fad83;">zip</span><span>(term.</span><span style="color:#1fad83;">powers</span><span>().</span><span style="color:#1fad83;">iter</span><span>())
+</span><span>            .</span><span style="color:#1fad83;">find</span><span>(|(&amp;</span><span style="color:#d73737;">v</span><span>, _)| v == i)
+</span><span>        {
+</span><span>            Some((_, p)) =&gt; *p,
+</span><span>            None =&gt; </span><span style="color:#b65611;">0</span><span>,
+</span><span>        };
+</span><span>        </span><span style="color:#b854d4;">let</span><span> new_coeff = *coeff * eval;
+</span><span>        res += &amp;univariate::SparsePolynomial::from_coefficients_slice(&amp;[(power, new_coeff)]);
+</span><span>    }
+</span><span>    res
+</span><span>}
+</span></code></pre>
+<h2 id="computing-prover-s-j-th-round-univariate-polynomials">Computing Prover's $j$-th round univariate polynomials</h2>
+<p>Recall that at each round Prover has to send Verifier a univariate polynomial
+that is claimed to be</p>
+<blockquote>
+<p>$$
+\sum_{(x_{j+1},...,x_{\nu}) \in \lbrace 0,1 \rbrace^{\nu - j}}
+g(r_1,\dots,r_{j-1},X_j,x_{j+1},\dots,x_{\nu})
+$$</p>
+</blockquote>
+<p>For some fixed values $r_1,\dots,r_{j-1}$ that Prover has previously received from the Verifier.
+Using the building block from the previous section the implementation is straightforward:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">fn </span><span style="color:#6684e1;">multivariate_to_univariate_with_fixed_vars</span><span>&lt;F: Field, P: DenseMVPolynomial&lt;F&gt;&gt;(
+</span><span>    </span><span style="color:#d73737;">g</span><span>: &amp;P,
+</span><span>    </span><span style="color:#d73737;">r</span><span>: &amp;[F],
+</span><span>    </span><span style="color:#d73737;">j</span><span>: </span><span style="color:#b854d4;">usize</span><span>,
+</span><span>) -&gt; univariate::SparsePolynomial&lt;F&gt; {
+</span><span>    </span><span style="color:#b854d4;">let mut</span><span> res = univariate::SparsePolynomial::&lt;F&gt;::zero();
+</span><span>
+</span><span>    </span><span style="color:#999580;">// A Boolean hypercube over variables X_{j+1}...X_{n}.
+</span><span>    </span><span style="color:#b854d4;">for</span><span> x_point in BooleanHypercube::new((g.</span><span style="color:#1fad83;">num_vars</span><span>() - j - </span><span style="color:#b65611;">1</span><span>) as </span><span style="color:#b854d4;">u32</span><span>) {
+</span><span>        </span><span style="color:#999580;">// [r_1,...,r_{j-1},1,X_{j+1},...,X_n]
+</span><span>        </span><span style="color:#b854d4;">let mut</span><span> point = r.</span><span style="color:#1fad83;">to_vec</span><span>();
+</span><span>        point.</span><span style="color:#1fad83;">push</span><span>(F::one());
+</span><span>        point.</span><span style="color:#1fad83;">extend</span><span>(x_point.</span><span style="color:#1fad83;">into_iter</span><span>());
+</span><span>
+</span><span>        </span><span style="color:#b854d4;">let</span><span> r = </span><span style="color:#1fad83;">to_univariate_polynomial_at_x_j</span><span>(g, j, &amp;point);
+</span><span>        res += &amp;r;
+</span><span>    }
+</span><span>
+</span><span>    res
+</span><span>}
+</span></code></pre>
+<h2 id="implementing-the-prover">Implementing the Prover</h2>
+<p>The Prover works with a polynomial $g$, the value $C_1$ that it <em>claims</em> to be the
+true answer and a set of random values $r_j$ that it receives from the Verifier
+at each round of the protocol. It would make sense to unite these in a state of
+the Prover:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">pub struct </span><span>Prover&lt;F: Field&gt; {
+</span><span>    </span><span style="color:#d73737;">g</span><span>: multivariate::SparsePolynomial&lt;F, multivariate::SparseTerm&gt;,
+</span><span>    </span><span style="color:#d73737;">c_1</span><span>: F,
+</span><span>    </span><span style="color:#d73737;">r</span><span>: Vec&lt;F&gt;,
+</span><span>}
+</span></code></pre>
+<p>The description of the $j$-th round of the Prover given above can now be implemented:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">impl</span><span>&lt;F: Field&gt; Prover&lt;F&gt; {
+</span><span>    </span><span style="color:#b854d4;">pub fn </span><span style="color:#6684e1;">round</span><span>(&amp;</span><span style="color:#b854d4;">mut </span><span style="color:#d73737;">self</span><span>, </span><span style="color:#d73737;">r_prev</span><span>: F, </span><span style="color:#d73737;">j</span><span>: </span><span style="color:#b854d4;">usize</span><span>) -&gt; univariate::SparsePolynomial&lt;F&gt; {
+</span><span>        </span><span style="color:#b854d4;">if</span><span> j != </span><span style="color:#b65611;">0 </span><span>{
+</span><span>            </span><span style="color:#d73737;">self</span><span>.r.</span><span style="color:#1fad83;">push</span><span>(r_prev);
+</span><span>        }
+</span><span>        </span><span style="color:#1fad83;">multivariate_to_univariate_with_fixed_vars</span><span>(&amp;</span><span style="color:#d73737;">self</span><span>.g, &amp;</span><span style="color:#d73737;">self</span><span>.r, j)
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h2 id="implementing-the-verifier">Implementing the Verifier</h2>
+<p>The Verifier on each round but the final one outputs a random value $r_j$ that is sent
+to the Prover. In the final round Verifier outputs the result of the verification process.
+This can be described as a type with an <code>enum</code>:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">pub enum </span><span>VerifierRoundResult&lt;F: Field&gt; {
+</span><span>    JthRound(F),
+</span><span>    FinalRound(</span><span style="color:#b854d4;">bool</span><span>),
+</span><span>}
+</span></code></pre>
+<p>Verifier has to know</p>
+<ol>
+<li>the number of variables $n$ of the polynomial</li>
+<li>the value $C_1$ claimed to be the true answer by the Prover</li>
+<li>polynomials $g_i,...,g_j$ sent by the Prover at each round</li>
+<li>random values that were picked by the Verifier at each round</li>
+<li>a polynomial $g$ for the oracle access</li>
+</ol>
+<p>Uniting these into one struct:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">pub struct </span><span>Verifier&lt;F: Field&gt; {
+</span><span>    </span><span style="color:#d73737;">n</span><span>: </span><span style="color:#b854d4;">usize</span><span>,
+</span><span>    </span><span style="color:#d73737;">c_1</span><span>: F,
+</span><span>    </span><span style="color:#d73737;">g_part</span><span>: Vec&lt;univariate::SparsePolynomial&lt;F&gt;&gt;,
+</span><span>    </span><span style="color:#d73737;">r</span><span>: Vec&lt;F&gt;,
+</span><span>    </span><span style="color:#d73737;">g</span><span>: multivariate::SparsePolynomial&lt;F, multivariate::SparseTerm&gt;,
+</span><span>}
+</span></code></pre>
+<p>Finally, we have to implement a run of the single round of the Verifier.
+The book describes Verifier rounds:</p>
+<p>First round:</p>
+<blockquote>
+<p>At the first round Verifier checks that $C_1 = g_1(0) + g_1(1)$, i.e. the verifier
+checks that $g_1$ and the claimed answer are consistent with Equation.</p>
+</blockquote>
+<p>$j$-th round:</p>
+<blockquote>
+<p>The Verifier compares the two most recent polynomials by checking
+$g_{j-1}(r_{j-1}) = g_j(0) + g_j(1)$ and rejecting otherwise.</p>
+</blockquote>
+<p>Final round:</p>
+<blockquote>
+<p>The prover has sent g_n(X_n) which is claimed to be $g(r_1,\dots,r_{n-1},X_n)$.
+Verifier now checks that $g_n(r_n) = g(r_1,...,r_n)$. If this check succeeds as
+well as all the previous checks then the Verifier is convinced that $H = g_1(0) + g_1(1)$.</p>
+</blockquote>
+<p>Since the Verifier does custom things on round 1 and $n$ the code will be less compact:</p>
+<pre data-lang="rust" style="background-color:#fefbec;color:#6e6b5e;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b854d4;">impl</span><span>&lt;F: Field&gt; Verifier&lt;F&gt; {
+</span><span>    </span><span style="color:#b854d4;">pub fn </span><span style="color:#6684e1;">round</span><span>&lt;R: Rng&gt;(
+</span><span>        &amp;</span><span style="color:#b854d4;">mut </span><span style="color:#d73737;">self</span><span>,
+</span><span>        </span><span style="color:#d73737;">g_j</span><span>: univariate::SparsePolynomial&lt;F&gt;,
+</span><span>        </span><span style="color:#d73737;">rng</span><span>: &amp;</span><span style="color:#b854d4;">mut</span><span> R,
+</span><span>    ) -&gt; Result&lt;VerifierRoundResult&lt;F&gt;, ()&gt; {
+</span><span>        </span><span style="color:#b854d4;">let</span><span> r_j = F::rand(rng);
+</span><span>        </span><span style="color:#b854d4;">if </span><span style="color:#d73737;">self</span><span>.r.</span><span style="color:#1fad83;">is_empty</span><span>() {
+</span><span>            </span><span style="color:#999580;">// First Round
+</span><span>            </span><span style="color:#b854d4;">if </span><span style="color:#d73737;">self</span><span>.</span><span style="color:#b854d4;">c_1 </span><span>!= g_j.</span><span style="color:#1fad83;">evaluate</span><span>(&amp;F::zero()) + g_j.</span><span style="color:#1fad83;">evaluate</span><span>(&amp;F::one()) {
+</span><span>                Err(())
+</span><span>            } </span><span style="color:#b854d4;">else </span><span>{
+</span><span>                </span><span style="color:#d73737;">self</span><span>.g_part.</span><span style="color:#1fad83;">push</span><span>(g_j);
+</span><span>                </span><span style="color:#d73737;">self</span><span>.r.</span><span style="color:#1fad83;">push</span><span>(r_j);
+</span><span>
+</span><span>                Ok(VerifierRoundResult::JthRound(r_j))
+</span><span>            }
+</span><span>        } </span><span style="color:#b854d4;">else if </span><span style="color:#d73737;">self</span><span>.r.</span><span style="color:#1fad83;">len</span><span>() == (</span><span style="color:#d73737;">self</span><span>.n - </span><span style="color:#b65611;">1</span><span>) {
+</span><span>            </span><span style="color:#999580;">// Last round
+</span><span>            </span><span style="color:#d73737;">self</span><span>.r.</span><span style="color:#1fad83;">push</span><span>(r_j);
+</span><span>            Ok(VerifierRoundResult::FinalRound(
+</span><span>                g_j.</span><span style="color:#1fad83;">evaluate</span><span>(&amp;r_j) == </span><span style="color:#d73737;">self</span><span>.g.</span><span style="color:#1fad83;">evaluate</span><span>(&amp;</span><span style="color:#d73737;">self</span><span>.r),
+</span><span>            ))
+</span><span>        } </span><span style="color:#b854d4;">else </span><span>{
+</span><span>            </span><span style="color:#999580;">// j-th round
+</span><span>            </span><span style="color:#b854d4;">let</span><span> g_jprev = </span><span style="color:#d73737;">self</span><span>.g_part.</span><span style="color:#1fad83;">last</span><span>().</span><span style="color:#1fad83;">unwrap</span><span>();
+</span><span>            </span><span style="color:#b854d4;">let</span><span> r_jprev = </span><span style="color:#d73737;">self</span><span>.r.</span><span style="color:#1fad83;">last</span><span>().</span><span style="color:#1fad83;">unwrap</span><span>();
+</span><span>
+</span><span>            </span><span style="color:#b854d4;">if</span><span> g_jprev.</span><span style="color:#1fad83;">evaluate</span><span>(r_jprev) != (g_j.</span><span style="color:#1fad83;">evaluate</span><span>(&amp;F::zero()) + g_j.</span><span style="color:#1fad83;">evaluate</span><span>(&amp;F::one())) {
+</span><span>                </span><span style="color:#b854d4;">return </span><span>Err(());
+</span><span>            }
+</span><span>
+</span><span>            </span><span style="color:#d73737;">self</span><span>.g_part.</span><span style="color:#1fad83;">push</span><span>(g_j);
+</span><span>            </span><span style="color:#d73737;">self</span><span>.r.</span><span style="color:#1fad83;">push</span><span>(r_j);
+</span><span>
+</span><span>            Ok(VerifierRoundResult::JthRound(r_j))
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h2 id="that-would-be-it-for-today">That would be it for today</h2>
+<p>The code for this post is published <a href="https://github.com/montekki/thaler-study/tree/master/sum-check-protocol">here</a>.</p>
+<hr />
+<h2 id="changelog">Changelog</h2>
+<p><code>26-08-2022</code></p>
+<ul>
+<li>Fixed typos and things pointed out in review by <a href="https://github.com/thor314">Thor</a>.</li>
+</ul>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2024-09-06T20:18:18.306824102+00:00">2022-2024</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>
