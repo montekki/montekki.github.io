@@ -1,0 +1,7 @@
+User-agent: *
+Disallow:
+Allow: /
+Sitemap: https://montekki.github.io/sitemap.xml
+
+User-agent: GPTBot
+Disallow: /
