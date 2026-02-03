@@ -15,7 +15,7 @@ taxonomies = [
 ]
 
 [markdown.highlighting]
-theme = "base16-atelierdune-light"
+theme = "gruvbox-dark-soft"
 
 [extra]
 author = "Fedor Sakharov"
