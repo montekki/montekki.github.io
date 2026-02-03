@@ -14,9 +14,8 @@ taxonomies = [
     { name = "tags" },
 ]
 
-[markdown]
-highlight_code = true 
-highlight_theme = "base16-atelierdune-light"
+[markdown.highlighting]
+theme = "base16-atelierdune-light"
 
 [extra]
 author = "Fedor Sakharov"
