@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+<title>Implementing Sum Check protocol in Rust</title>
+
+
+
+<meta property="og:title" content="Implementing Sum Check protocol in Rust">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+
+
+<link rel="canonical" href="https://montekki.github.io/thaler-ch4-1/">
+<meta property="og:url" content="https://montekki.github.io/thaler-ch4-1/">
+
+
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+  
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2022-07-06T00:00:00+00:00">
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image"">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+
+
+
+  <meta property="twitter:title" content="Implementing Sum Check protocol in Rust">
+
+
+
+  <meta name="twitter:site" content="@m0nt3kk1">
+  
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "author": {
+    "@type":"Person",
+	  "name":"Fedor Sakharov"
+  },
+  "description": "",
+  "url": "https://montekki.github.io/thaler-ch4-1/",
+  "@context":"https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Implementing Sum Check protocol in Rust"
+  
+    
+    
+      "datePublished":"2022-07-06T00:00:00+00:00",
+    
+    ,
+    "mainEntityOfPage":{
+      "@type":"WebPage",
+      "@id":"https://montekki.github.io/thaler-ch4-1/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+                                                                                                                                                                                                            <script>
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title"></h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2022-07-06">July  6, 2022</time>
+  	</div>
+  	<h1 class="post-title">Implementing Sum Check protocol in Rust</h1>
+  	<div class="post-line"></div>
+  	<p>This post is going go into reading the Sum Check protocol from the book
+and discussing a naive implementation of the described protocol in Rust.
+Again as in <a href="https://montekki.github.io/thaler-ch3/">previous post</a> the main goal of the
+post is going to be so to speak "gluing" together the math text
+and the implementation in software.</p>
+<span id="continue-reading"></span><h1 id="the-sum-check-protocol">The Sum-Check protocol</h1>
+<p>Let's take a look at what Sum-Check protocol is and how it can be implemented. From the book:</p>
+<blockquote>
+<p>Suppose we are given a $\nu$-variate polynomial $g$ defined over a finite field $\mathbb{F}$.
+The purpose of the sum-check protocol is for prover to provide the verifier with the following
+sum:</p>
+<p>$$
+H := \sum_{b_1 \in \lbrace 0, 1 \rbrace } \sum_{b_2 \in \lbrace 0,1 \rbrace } \cdots
+\sum_{b_{\nu} \in \lbrace 0, 1 \rbrace } g(b_1,\dots,b_{\nu}).
+$$</p>
+</blockquote>
+<blockquote>
+<p>Both the Verifier and the Prover can directly compute $H$ directly by evaluating
+$H$ by evaluating $g$ over $2^\nu$ inputs (namely, all inputs in $\lbrace 0, 1 \rbrace^\nu$).
+Using the Sum-Check protocol the verifier's runtime will be</p>
+<p>$$
+\mathcal{O}(\nu + [\text{the cost to evaluate } g \text{ at a single input } \mathbb{F}^\nu])
+$$</p>
+</blockquote>
+<p>For the full protocol description (actually multiple descriptions: in recursive and in iterative
+forms) it would be best to check the book text so here it will be truncated to the points
+relevant to the implementation.</p>
+<p>The protocol happens in steps and on each step Prover sends univariate polynomials of the form</p>
+<blockquote>
+<p>$$
+\sum_{(x_{j+1},...,x_{\nu}) \in \lbrace 0,1 \rbrace^{\nu - j}}
+g(r_1,\dots,r_{j-1},X_j,x_{j+1},\dots,x_{\nu})
+$$</p>
+</blockquote>
+<p>As you can see what this does it turns the polynomial multivariate polynomial $H$
+into a univariate polynomial of variable $X_j$ by</p>
+<ul>
+<li>fixing variables $X_1,\dots,X_{j-1}$ to constant values $r_1,\dots,r_{j - 1}$ and</li>
+<li>summing the resulting multivariate polynomial over a Boolean hypercube of values of
+$X_{j+1},\dots,X_{\nu}$</li>
+</ul>
+<h1 id="implementing-the-building-blocks-in-rust">Implementing the building blocks in Rust</h1>
+<p>The above vague description of the Sum Check protocol as well as the original description
+from the book give us several ideas which building blocks may go into the final implementation.
+As before the <a rel="external" href="https://arkworks.rs">arkworks-rs</a> framework is going to be used.
+It is worth noting that this framework has an implementation of the
+<a rel="external" href="https://github.com/arkworks-rs/sumcheck">Sum Check protocol</a>.</p>
+<h2 id="boolean-hypercube-of-mathbb-f-n-in-rust">Boolean hypercube of $\mathbb{F}^n$ in Rust</h2>
+<p>The evaluation of $H$ as well as evaluations of the polynomials of each step of the
+protocol involve iterating over a Boolean hypercube ( $ \forall x \in \lbrace 0, 1 \rbrace  ^n$)
+of some size $n$. It would be convenient to have an utility iterator to do exactly that.</p>
+<p>For any software developer a quick example of a hypercube would immediately come to mind: all
+possible values of some fixed-size integer variable in binary form. As such for <code>u8</code> such values
+start from <code>0</code> and end with <code>255</code> or <code>0..0</code> and <code>1..1</code> respectively. Everyone knows the
+asymptotics of the number of such possible values depending on the size: at the moment
+common operating systems use <code>u64</code> variables can address $2^{64}$ bytes of memory which is
+more than enough for modern machines.</p>
+<p>If we could iterate over the values of a variable of fixed size and then <code>.map()</code> these
+values from bits to ${0, 1} \in \mathbb{F}$ that would be the easiest thing to do.
+Crate <a rel="external" href="https://crates.io/crates/bitvec">bitvec</a> has a primitive that would allow us
+to do just that.</p>
+<p>Lets create a struct that knows the dimensionality of the hypercube it needs
+to iterate over and also the current position within this cube:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> BooleanHypercube</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    n</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> u32</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    current</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> u64</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    __f</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> PhantomData</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>None that this struct is generic over the type of the field $\mathbb{F}$.</p>
+<p>Now to the <code>Iterator</code> implementation:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> Iterator</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> BooleanHypercube</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    type</span><span style="color: #FABD2F;"> Item</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> next</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Item</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>current </span><span style="color: #8EC07C;">==</span><span style="color: #D3869B;"> 2</span><span style="color: #FABD2F;">u64</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">pow</span><span style="color: #A89984;">(</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>n</span><span style="color: #A89984;">) {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            None</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span><span style="color: #FB4934;"> else</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> vec</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>current</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_le_bytes</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> s</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FABD2F;">BitSlice</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> BitSlice</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">try_from_slice</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">vec</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>current </span><span style="color: #8EC07C;">+=</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            Some</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                s</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                    .</span><span style="color: #FABD2F;">take</span><span style="color: #A89984;">(</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>n </span><span style="color: #FB4934;">as</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                    .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">f</span><span style="color: #FB4934;">| match</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;">f</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #D3869B;">                        false</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">(),</span></span>
+<span class="giallo-l"><span style="color: #D3869B;">                        true</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">(),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">                    })</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                    .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">(),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            )</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>As you can see the <code>current</code> counter is turned into a Little Endian <code>[u8]</code> slice of bytes
+and the <code>bitvec</code>'s <code>BitSlice</code> is used to iterate over the bits of the value.
+This iterator will always contain the fixed number of bytes since there is a fixed number of
+bytes in <code>u32</code> so the first <code>n</code> have to be <code>.take()</code>-en. Then the values are mapped from
+<code>bool</code> values to $\lbrace 0, 1 \rbrace \in \mathbb{F}$ and collected into a final vector
+that is returned to the caller.</p>
+<h2 id="partially-computing-multivariate-polynomials-into-a-univariate-ones">Partially computing multivariate polynomials into a univariate ones</h2>
+<p>Another part of the protocol is the reduction of a multivariate polynomial
+into a univariate one by fixing all but one variables. In other words, for instance
+by fixing $r_1,\dots,r_{j-1}$ and $x_{j+1},\dots,x_\nu$ a multivariate polynomial
+$g(X_1,\dots,X_\nu)$ is going to be reduced to a univariate one
+$g(r_1,\dots,r_{j-1},X_j,x_{j+1},\dots,x_\nu)$. This can be done by substituting
+variables with their fixed values in every term of the original multivariate polynomial.</p>
+<p>The trait <code>DenseMVPolynomial&lt;F: Field&gt;</code> describes the interface of the multivariate
+polynomials in <code>ark_poly</code>. I allows to get the terms of the underlying polynomial
+by calling <code>.terms()</code> on it which would return a sequence of type <code>(F, Self::Term)</code>.</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> DenseMVPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Polynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    type</span><span style="color: #FABD2F;"> Term</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> multivariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Term</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> terms</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt; &amp;</span><span style="color: #A89984;">[(</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Term</span><span style="color: #A89984;">)];</span></span></code></pre>
+<p>The associated type <code>Term</code> on this trait is bound by the <code>multivariate::Term</code> trait
+that requires it to have an <code>evaluate</code> method for evaluating at some point.</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> Term</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> evaluate</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> p</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">;</span></span></code></pre>
+<p>So this gives us the idea of the implementation:
+evaluate each term in our polynomial $g$ at a point $(r_1,\dots,r_{j-1},1,x_{j+1},\dots,x_\nu)$,
+multiply this evaluation by $X_j^t$ where $t$ is the degree of $X_j$ in this term, add the results
+together.</p>
+<p>For example consider this polynomial $g$ over $\mathbb{F}_5$:</p>
+<p>$$
+g(X_1, X_2, X_3) := X_1 X_2^2 + X_3
+$$</p>
+<p>to turn it into the univariate over $X_2$ with fixed $X_1 = 2$, $X_3 = 1$:</p>
+<p>$$
+g(2, X_2, 1) = \underbrace{ 2 }_{X_1 X_2^2 \text { evaluated at } \lbrace 2, 1, 1 \rbrace }
+X_2^2 + \underbrace{1}_{X_3 \text{ evaluated at } \lbrace 2, 1, 1 \rbrace } \equiv 2X_2^2 + 1
+$$</p>
+<p>So with that the code doing that is following:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> to_univariate_polynomial_at_x_j</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> DenseMVPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    p</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    i</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    at</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> at_temp</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> at</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_vec</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    at_temp</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">coeff</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> term</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> in</span><span style="color: #83A598;"> p</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">terms</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> eval</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> term</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">at_temp</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> power</span><span style="color: #8EC07C;"> =</span><span style="color: #FB4934;"> match</span><span style="color: #83A598;"> term</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">vars</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">zip</span><span style="color: #A89984;">(</span><span style="color: #83A598;">term</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">powers</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">())</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">find</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">v</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> _</span><span style="color: #A89984;">)</span><span style="color: #FB4934;">|</span><span style="color: #83A598;"> v</span><span style="color: #8EC07C;"> ==</span><span style="color: #83A598;"> i</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            Some</span><span style="color: #A89984;">((</span><span style="color: #83A598;">_</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> p</span><span style="color: #A89984;">))</span><span style="color: #8EC07C;"> =&gt; *</span><span style="color: #83A598;">p</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            None</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #D3869B;"> 0</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        };</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> new_coeff</span><span style="color: #8EC07C;"> = *</span><span style="color: #83A598;">coeff</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> eval</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        res</span><span style="color: #8EC07C;"> += &amp;</span><span style="color: #FABD2F;">univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">from_coefficients_slice</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #A89984;">[(</span><span style="color: #83A598;">power</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> new_coeff</span><span style="color: #A89984;">)]);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    res</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h2 id="computing-prover-s-j-th-round-univariate-polynomials">Computing Prover's $j$-th round univariate polynomials</h2>
+<p>Recall that at each round Prover has to send Verifier a univariate polynomial
+that is claimed to be</p>
+<blockquote>
+<p>$$
+\sum_{(x_{j+1},...,x_{\nu}) \in \lbrace 0,1 \rbrace^{\nu - j}}
+g(r_1,\dots,r_{j-1},X_j,x_{j+1},\dots,x_{\nu})
+$$</p>
+</blockquote>
+<p>For some fixed values $r_1,\dots,r_{j-1}$ that Prover has previously received from the Verifier.
+Using the building block from the previous section the implementation is straightforward:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> multivariate_to_univariate_with_fixed_vars</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> DenseMVPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    g</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    r</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #8EC07C;">::</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    // A Boolean hypercube over variables X_{j+1}...X_{n}.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #83A598;"> x_point</span><span style="color: #FB4934;"> in</span><span style="color: #FABD2F;"> BooleanHypercube</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">((</span><span style="color: #83A598;">g</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;"> -</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> u32</span><span style="color: #A89984;">) {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        // [r_1,...,r_{j-1},1,X_{j+1},...,X_n]</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> point</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_vec</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        point</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">());</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        point</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">extend</span><span style="color: #A89984;">(</span><span style="color: #83A598;">x_point</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into_iter</span><span style="color: #A89984;">());</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> r</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> to_univariate_polynomial_at_x_j</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        res</span><span style="color: #8EC07C;"> += &amp;</span><span style="color: #83A598;">r</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">    res</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h2 id="implementing-the-prover">Implementing the Prover</h2>
+<p>The Prover works with a polynomial $g$, the value $C_1$ that it <em>claims</em> to be the
+true answer and a set of random values $r_j$ that it receives from the Verifier
+at each round of the protocol. It would make sense to unite these in a state of
+the Prover:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> Prover</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    g</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> multivariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> multivariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparseTerm</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    c_1</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    r</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>The description of the $j$-th round of the Prover given above can now be implemented:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> Prover</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> round</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> r_prev</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;"> !=</span><span style="color: #D3869B;"> 0</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_prev</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        multivariate_to_univariate_with_fixed_vars</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>g</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h2 id="implementing-the-verifier">Implementing the Verifier</h2>
+<p>The Verifier on each round but the final one outputs a random value $r_j$ that is sent
+to the Prover. In the final round Verifier outputs the result of the verification process.
+This can be described as a type with an <code>enum</code>:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> enum</span><span style="color: #FABD2F;"> VerifierRoundResult</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    JthRound</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">),</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    FinalRound</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">bool</span><span style="color: #A89984;">),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>Verifier has to know</p>
+<ol>
+<li>the number of variables $n$ of the polynomial</li>
+<li>the value $C_1$ claimed to be the true answer by the Prover</li>
+<li>polynomials $g_i,...,g_j$ sent by the Prover at each round</li>
+<li>random values that were picked by the Verifier at each round</li>
+<li>a polynomial $g$ for the oracle access</li>
+</ol>
+<p>Uniting these into one struct:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> Verifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    n</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    c_1</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    g_part</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    r</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    g</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> multivariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> multivariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparseTerm</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>Finally, we have to implement a run of the single round of the Verifier.
+The book describes Verifier rounds:</p>
+<p>First round:</p>
+<blockquote>
+<p>At the first round Verifier checks that $C_1 = g_1(0) + g_1(1)$, i.e. the verifier
+checks that $g_1$ and the claimed answer are consistent with Equation.</p>
+</blockquote>
+<p>$j$-th round:</p>
+<blockquote>
+<p>The Verifier compares the two most recent polynomials by checking
+$g_{j-1}(r_{j-1}) = g_j(0) + g_j(1)$ and rejecting otherwise.</p>
+</blockquote>
+<p>Final round:</p>
+<blockquote>
+<p>The prover has sent g_n(X_n) which is claimed to be $g(r_1,\dots,r_{n-1},X_n)$.
+Verifier now checks that $g_n(r_n) = g(r_1,...,r_n)$. If this check succeeds as
+well as all the previous checks then the Verifier is convinced that $H = g_1(0) + g_1(1)$.</p>
+</blockquote>
+<p>Since the Verifier does custom things on round 1 and $n$ the code will be less compact:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> Verifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> round</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">R</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Rng</span><span style="color: #A89984;">&gt;(</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        g_j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        rng</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    )</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">VerifierRoundResult</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;, ()&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> r_j</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">rand</span><span style="color: #A89984;">(</span><span style="color: #83A598;">rng</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">is_empty</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">            // First Round</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">            if</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>c_1 </span><span style="color: #8EC07C;">!=</span><span style="color: #83A598;"> g_j</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;"> +</span><span style="color: #83A598;"> g_j</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()) {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                Err</span><span style="color: #A89984;">(())</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span><span style="color: #FB4934;"> else</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                self</span><span style="color: #8EC07C;">.</span><span>g_part</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g_j</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                Ok</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">VerifierRoundResult</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">JthRound</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">))</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span><span style="color: #FB4934;"> else if</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> ==</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>n </span><span style="color: #8EC07C;">-</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">) {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">            // Last round</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            Ok</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">VerifierRoundResult</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">FinalRound</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                g_j</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> ==</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>g</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #A89984;">),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            ))</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span><span style="color: #FB4934;"> else</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">            // j-th round</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> g_jprev</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>g_part</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">last</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> r_jprev</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">last</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">            if</span><span style="color: #83A598;"> g_jprev</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_jprev</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> !=</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">g_j</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;"> +</span><span style="color: #83A598;"> g_j</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">())) {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">                return</span><span style="color: #FABD2F;"> Err</span><span style="color: #A89984;">(());</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>g_part</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g_j</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            Ok</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">VerifierRoundResult</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">JthRound</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">))</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h2 id="that-would-be-it-for-today">That would be it for today</h2>
+<p>The code for this post is published <a rel="external" href="https://github.com/montekki/thaler-study/tree/master/sum-check-protocol">here</a>.</p>
+<hr />
+<h2 id="changelog">Changelog</h2>
+<p><code>26-08-2022</code></p>
+<ul>
+<li>Fixed typos and things pointed out in review by <a rel="external" href="https://github.com/thor314">Thor</a>.</li>
+</ul>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2026-02-03T05:12:23.965097880+00:00">2022-2026</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>

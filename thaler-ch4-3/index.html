@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+<title>Efficient IP for MatMult</title>
+
+
+
+<meta property="og:title" content="Efficient IP for MatMult">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+
+
+<link rel="canonical" href="https://montekki.github.io/thaler-ch4-3/">
+<meta property="og:url" content="https://montekki.github.io/thaler-ch4-3/">
+
+
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+  
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2022-09-09T00:00:00+00:00">
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image"">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+
+
+
+  <meta property="twitter:title" content="Efficient IP for MatMult">
+
+
+
+  <meta name="twitter:site" content="@m0nt3kk1">
+  
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "author": {
+    "@type":"Person",
+	  "name":"Fedor Sakharov"
+  },
+  "description": "",
+  "url": "https://montekki.github.io/thaler-ch4-3/",
+  "@context":"https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Efficient IP for MatMult"
+  
+    
+    
+      "datePublished":"2022-09-09T00:00:00+00:00",
+    
+    ,
+    "mainEntityOfPage":{
+      "@type":"WebPage",
+      "@id":"https://montekki.github.io/thaler-ch4-3/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+                                                                                                                                                                                                            <script>
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title"></h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2022-09-09">September  9, 2022</time>
+  	</div>
+  	<h1 class="post-title">Efficient IP for MatMult</h1>
+  	<div class="post-line"></div>
+  	<p>Hi how about some performance? In Chapter 4 the book first introduces
+a regular MatMult IP that has already been implemented in
+<a href="https://montekki.github.io/thaler-ch4-2/">previous post</a> and then discusses
+the performance improvements to it. Should be fun, let's dive right in.</p>
+<span id="continue-reading"></span>
+<p>The Book first introduces a general method for MatMult IP that
+gives us a Prover's total runtime of $\mathcal{O}(n^3)$ and then
+goes on about ideas on shaving that off to $\mathcal{O}(n^2)$.</p>
+<p>This less formal discussion illustrates the ideas on the example
+of a matrix multiplication but then generalizes them in three lemmas.
+Let's discuss them and what form they take in code.</p>
+<h3 id="lemma-4-3">Lemma 4.3</h3>
+<p>Suppose that $p$ is an $l$-variate multilinear polynomial over
+field $\mathbb{F}$ and that $A$ is an array of length $2^l$ such that
+$\forall x \in \lbrace 0; 1 \rbrace ^l, A[x] = p(x)$.</p>
+<p>Then for any $r_1 \in \mathbb{F}$ there is an algorithm running in
+time $\mathcal{O}(2^l)$, that given $r_1$ and $A$ as input, computes an
+array $B$ of length $2^{l-1}$ such that
+$\forall x' \in \lbrace 0; 1 \rbrace ^{l-1}, B[x'] = p(r_1, x')$.</p>
+<p>Proof reminds us that the multilinear polynomial $p(x_1,x_2,\cdots,x_n)$
+can be expressed via:</p>
+<p>$$
+p(x_1,x_2,\cdots,x_n) = x_1 \cdot p(1,x_1,\cdots,x_n) +
+(1 - x_1) \cdot p(0,x_2,\cdots,x_n)
+$$</p>
+<p>The algorithm to compute $B$ iterates over every value
+$x' \in \lbrace 0; 1 \rbrace ^{l-1}$ and sets</p>
+<p>$$
+B[x'] \leftarrow r_1 \cdot A[1;x'] + (1 - r_1)\cdot A[0;x']
+$$</p>
+<p>Lets try to unpack this and understand how that can look like in code.</p>
+<p>If we have multilinear extension in the evaluations form where
+by indexing into an array of evaluations at index $i$ we get
+the evaluation of the polynomial at point
+$x = \lbrace 0; 1 \rbrace ^ {\text{num vars}}$ where $i$ encodes
+$x$ in binary form. Then the above algorithm can be implemented
+like this (more of a pseudocode, i haven't tested this exact code):</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> fix_variable</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;(</span><span style="color: #83A598;">a</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span><span style="color: #83A598;"> r_1</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    // A has length 2^l and as such B should have lenth 2^{l-1}.</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    // We can calculate it by a bitwise shift one position</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    // to the right</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> b_length</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">()</span><span style="color: #FB4934;"> &gt;&gt;</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    // Then we pre-allocate B with a necessary capacity</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> b</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Vec</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">with_capacity</span><span style="color: #A89984;">(</span><span style="color: #83A598;">b_length</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    // Iterate over all indices of B and perform computation as above</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #83A598;"> x</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 0</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">b_length</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> b_i</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> r_1</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> a</span><span style="color: #A89984;">[(</span><span style="color: #83A598;">x</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> +</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> +</span><span style="color: #A89984;"> (</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #83A598;"> r_1</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> a</span><span style="color: #A89984;">[</span><span style="color: #83A598;">x</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        b</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">b_i</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">    b</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>Looks not that bad, the only non-obvious thing here is the indexing
+into the $A$ array. Remember that to compute $B[x']$ we need to index
+into a at two points: $A[0;x']$ and $A[1;x']$. Within the bit-representation
+of $(x_1,\cdots,x_n)$ the first variable $x_1$ corresponds to the
+Least Significant Bit and so we can construct the indices into $A$
+by shifting the index $x'$ one bit right and setting the LSB to $1$ or $0$.</p>
+<p>One could imagine a more general implementation of this algorithm
+where instead of fixing just one first variable $r_1$ in the polynomial
+any number $i &lt; n$ of first variables could be fixed in place:
+$A[r_1,\cdots,r_i,x_{i+1},\cdots,x_{n}]$. That can be done by "fixing"
+one variable at a time:</p>
+<p>Compute</p>
+<p>$$
+A[r_1,x_2,\cdots,x_n]
+$$</p>
+<p>Use the result to compute</p>
+<p>$$
+A[r_2,x_3,\cdots,x_n]
+$$</p>
+<p>and so on.</p>
+<p>This is exactly what the method <a rel="external" href="https://github.com/arkworks-rs/algebra/blob/4d485734751a887caffda8c8c75147ab796d8922/poly/src/evaluations/multivariate/multilinear/dense.rs#L113-L129"><code>fix_variables()</code></a>
+of <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/struct.DenseMultilinearExtension.html"><code>DenseMultilinearExtension</code></a> is doing. That is neat
+and looks like no need to implement this part on our own!.</p>
+<h3 id="lemmas-4-4-and-4-5">Lemmas 4.4 and 4.5</h3>
+<p>Lemmas 4.4 and 4.5 give us the runtime of the Prover for the polynomial of
+form $g = p_1, p_2, \cdots, p_k$ where $p_i$ are multilinear polynomials.
+It is certainly useful to dive into the proofs of these lemmas but the
+main takeaway from them for us is best depicted in this Figure 4.6
+that gives us the recipe for what we have to do.</p>
+<p><img src="../figure_4_6.png" alt="Figure 4.6" /></p>
+<p>With this figure it easy to see the main idea: in each round of
+the algorithm it "fixes" the next variable in the multilinear polynomial
+and uses the result of the previous iteration to do that. As such
+at each iteration we will get all the necessary evaluations of the
+polynomial $g(r_1,\cdots,r_i,x_{i+1},\cdots,x_n)$ over a boolean
+hypercube at Provers step $i$ of the SumCheck protocol.</p>
+<h3 id="modifying-the-sumcheckpolynomial-trait">Modifying the <code>SumCheckPolynomial</code> trait</h3>
+<p>Recall that in the <a href="https://montekki.github.io/thaler-ch4-2/">previous post</a>
+a generalized trait for the polynomial was introduced. It does not
+really fit the algorithm described above and even speaking more
+generally: at each step $i$ of the SumCheck protocol it re-evaluates
+polynomial $g$ over each fixed variable so far $r_1,\cdots,r_i$
+and the boolean hypercube of the values of the variables not fixed so far.</p>
+<p>But regardless of the polynomial we are dealing with "fixing" variable, say,
+$r_1$ more than once is quite excessive, but it would be "fixed" $n$ times.
+This fact could be improved by introducing a method similar to <code>fix_variables</code>
+from the <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/struct.DenseMultilinearExtension.html"><code>DenseMultilinearExtension</code></a>.</p>
+<p>With that going to a univariate polynomial would make sense for
+only the first variable in the polynomial.</p>
+<p>The overall changed trait would look something like this:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> point</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> fix_variables</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> partial_point</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #83A598;"> Self</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> to_univariate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> num_vars</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> to_evaluations</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>This change was added in
+<a rel="external" href="https://github.com/montekki/thaler-study/commit/206039ca74b0307b9fe90c382530daadd85db6ef"><code>206039c</code></a></p>
+<h3 id="an-efficient-matmult-algorithm">An efficient MatMult algorithm</h3>
+<p>The change above would actually greatly simplify the previous
+code for MatMult <em>and</em> it would allow us to write an efficient
+version of it.</p>
+<p>The only remaining non-trivial function would be <code>to_univariate</code>:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> to_univariate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> domain</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> GeneralEvaluationDomain</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> GeneralEvaluationDomain</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">3</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> evals</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> domain</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        .</span><span style="color: #FABD2F;">elements</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">e</span><span style="color: #FB4934;">|</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> f_a_evals</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">fix_variables</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #A89984;">[</span><span style="color: #83A598;">e</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_evaluations</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> f_b_evals</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_b</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">fix_variables</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #A89984;">[</span><span style="color: #83A598;">e</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_evaluations</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            f_a_evals</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">into_iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">zip</span><span style="color: #A89984;">(</span><span style="color: #83A598;">f_b_evals</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into_iter</span><span style="color: #A89984;">())</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #A89984;">(</span><span style="color: #83A598;">a</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> b</span><span style="color: #A89984;">)</span><span style="color: #FB4934;">|</span><span style="color: #83A598;"> a</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> b</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">sum</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        })</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> evaluations</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Evaluations</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">from_vec_and_domain</span><span style="color: #A89984;">(</span><span style="color: #83A598;">evals</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> domain</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> p</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> evaluations</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">interpolate</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">    p</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>The main idea here is that at step $j$ of the protocol the
+polynomial $g(x_1,\cdots,x_n)$ is reduced to $g(x_j,\cdots,x_n)$
+by calling <code>fix_variables</code> at each step. This polynomial over
+$(x_j,\cdots,x_n)$ is used to utilize <code>GeneralEvaluationDomain</code> values
+to interpolate a univariate polynomial $g_j$.</p>
+<p>These changes have been implemented in <a rel="external" href="https://github.com/montekki/thaler-study/commit/569a73ac4c849928f3a4a15b9fce98323fd7d3d4"><code>569a73a</code></a></p>
+<h3 id="benchmarking-the-implementation">Benchmarking the implementation</h3>
+<p>With a simple benchmark with <code>criterion</code> we may see a following runtime
+of the Prover:</p>
+<p><img src="../matmul_benchmarks.svg" alt="Prover Runtime" /></p>
+<p>Looks ok, but this implementation is not exactly what the book talks about.</p>
+<h3 id="recycling-existing-evaluations">Recycling existing evaluations</h3>
+<p>If you think about the structure of vector of evaluations of $A[x]$
+as in Lemma 4.3 it has these values:</p>
+<p>$$
+g(0,x_{i+1},\cdots,x_n)
+$$</p>
+<p>$$
+g(1,x_{i+1},\cdots,x_n)
+$$</p>
+<p>And we need another point to be able to interpolate a quadratic polynomial,
+The Book gives us a way to do it:</p>
+<p>$$
+g(2,x_{i+1},\cdots,x_n) = 2 \cdot g(1,x_{i+1},\cdots,x_n) -
+g(0, x_{i+1},\cdots,x_n)
+$$</p>
+<p>These can be used as points to run a simple Lagrange interpolation
+over and save a lot of computation.</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> to_univariate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> two</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> +</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> evals</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> [</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">();</span><span style="color: #D3869B;"> 3</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        for</span><span style="color: #83A598;"> i</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 0</span><span style="color: #8EC07C;">..</span><span style="color: #D3869B;">2</span><span style="color: #FABD2F;">usize</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">pow</span><span style="color: #A89984;">(</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> u32</span><span style="color: #A89984;">) {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">            if</span><span style="color: #83A598;"> i</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #D3869B;"> 1</span><span style="color: #8EC07C;"> ==</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                evals</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">1</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> +=</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_b</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                evals</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">2</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> +=</span></span>
+<span class="giallo-l"><span style="color: #A89984;">                    (</span><span style="color: #83A598;">two</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> -</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #8EC07C;"> -</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> *</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">two</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_b</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> -</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_b</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #8EC07C;"> -</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">]);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span><span style="color: #FB4934;"> else</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                evals</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">0</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> +=</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_b</span><span style="color: #A89984;">[</span><span style="color: #83A598;">i</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> points</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> vec!</span><span style="color: #A89984;">[</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            (</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">(),</span><span style="color: #83A598;"> evals</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">0</span><span style="color: #A89984;">]),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            (</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">(),</span><span style="color: #83A598;"> evals</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">1</span><span style="color: #A89984;">]),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            (</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> +</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">(),</span><span style="color: #83A598;"> evals</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">2</span><span style="color: #A89984;">]),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        ];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        interpolate_quadratic_poly</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">points</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>Running a benchmark on this code will show improved results:</p>
+<p><img src="../matmul_benchmarks_improved.svg" alt="Prover Runtime" /></p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="plain"><span class="giallo-l"><span>prover/prove/12         time:   [62.123 µs 62.203 µs 62.397 µs]</span></span>
+<span class="giallo-l"><span>                        thrpt:  [192.32 Kelem/s 192.92 Kelem/s 193.16 Kelem/s]</span></span>
+<span class="giallo-l"><span>                 change:</span></span>
+<span class="giallo-l"><span>                        time:   [-59.466% -59.269% -59.065%] (p = 0.00 &lt; 0.05)</span></span>
+<span class="giallo-l"><span>                        thrpt:  [+144.29% +145.51% +146.71%]</span></span>
+<span class="giallo-l"><span>                        Performance has improved.</span></span></code></pre>
+<p>This has been implemented in <a rel="external" href="https://github.com/montekki/thaler-study/commit/42cf306c64c3ea11d3cd89ec915427c78c727d43"><code>42cf306</code></a></p>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2026-02-03T05:12:23.965097880+00:00">2022-2026</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>

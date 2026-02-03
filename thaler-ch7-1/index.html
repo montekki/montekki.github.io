@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+<title>A (Relaxed) PCS by Merkle Trees and Low-Degree Tests</title>
+
+
+
+<meta property="og:title" content="A (Relaxed) PCS by Merkle Trees and Low-Degree Tests">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+
+
+<link rel="canonical" href="https://montekki.github.io/thaler-ch7-1/">
+<meta property="og:url" content="https://montekki.github.io/thaler-ch7-1/">
+
+
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+  
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2023-01-09T00:00:00+00:00">
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image"">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+
+
+
+  <meta property="twitter:title" content="A (Relaxed) PCS by Merkle Trees and Low-Degree Tests">
+
+
+
+  <meta name="twitter:site" content="@m0nt3kk1">
+  
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "author": {
+    "@type":"Person",
+	  "name":"Fedor Sakharov"
+  },
+  "description": "",
+  "url": "https://montekki.github.io/thaler-ch7-1/",
+  "@context":"https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "A (Relaxed) PCS by Merkle Trees and Low-Degree Tests"
+  
+    
+    
+      "datePublished":"2023-01-09T00:00:00+00:00",
+    
+    ,
+    "mainEntityOfPage":{
+      "@type":"WebPage",
+      "@id":"https://montekki.github.io/thaler-ch7-1/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+                                                                                                                                                                                                            <script>
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title"></h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2023-01-09">January  9, 2023</time>
+  	</div>
+  	<h1 class="post-title">A (Relaxed) PCS by Merkle Trees and Low-Degree Tests</h1>
+  	<div class="post-line"></div>
+  	<p>Chapter three dives into a first Succinct Argument of Circuit
+Satisfiability. It does so by introducing what it calls a Relaxed
+Polynomial Commitment Scheme that combines Merkle Trees and
+Low-Degree tests. Implementing a first Succinct Argument sounds
+like an interesting challenge, let's find out.</p>
+<span id="continue-reading"></span>
+<p>In Chapter 7 The Books gives the main definitions and the motivations
+for the new objects called Polynomial Commitment Schemes. Essentially
+what we want is a scheme where $\mathcal{P}$ would "commit" to
+the evaluations of some polynomial and its degree to be later tested
+by $\mathcal{V}$.</p>
+<h2 id="the-scheme">The Scheme</h2>
+<p>The Scheme itself as it is quoting The Book:</p>
+<blockquote>
+<p>Let $\tilde{w} : \mathbb{F}^{\log n} \rightarrow \mathbb{F}$ be a
+($\log n$)-variate multilinear polynomial over $\mathbb{F}$.</p>
+<p>Let $s$ be the string consisting of all $|\mathbb{F}|^{\log n}$
+evaluations of $\tilde{w}$.</p>
+<p>One obtains a polynomial commitment scheme by applying a Merkle-tree
+based string commitment scheme to $s$ and then applying a low-degree
+test to $s$.</p>
+</blockquote>
+<p>Let's try to decompose it.</p>
+<h3 id="merkelizing-the-evaluations">Merkelizing the Evaluations</h3>
+<p>This is the easier part. Suppose for example that we have a function
+$\mathbb{F_5}^2$. The evaluation table for this function would look
+as follows:</p>
+<table><thead><tr><th>0 0</th><th>0 1</th><th>0 2</th><th>..</th><th>5 4</th><th>5 5</th></tr></thead><tbody>
+<tr><td>s[0]</td><td>s[1]</td><td>s[2]</td><td>..</td><td>s[23]</td><td>s[24]</td></tr>
+</tbody></table>
+<p>And in order for $\mathcal{P}$ to commit to all the evaluations of
+this function it needs to create a Merkle Tree of $s$ and send
+$\mathcal{V}$ the root of this tree. Later when $\mathcal{V}$ asks
+$\mathcal{P}$ to reveal any of the evaluations, $\mathcal{P}$ replies
+with the evaluation + a proof of this evaluation's inclusion into the
+tree. Since merkelizing things is such a common theme in the blockchain
+space I am not going to go into it any further.</p>
+<h3 id="running-a-low-degree-test">Running a Low-Degree Test</h3>
+<p>The explanation from The Book is a bit handwavy so it probably makes
+sense to look into [AS03] paper:</p>
+<p>The low degree test is presented with
+$f:\mathbb{F}^m \rightarrow \mathbb{F}$ and an integer $d$. It is also
+presented a table that is meant to be "proof" that $f$ is degree $d$
+polynomial. This table contains for each line in $\mathbb{F}^m$ a
+univariate degree $d$ polynomial that supposedly describes restriction
+of $f$ to that line. We will use the term $\textit{d-oracle}$ for any table that
+contains, for each line in $\mathbb{F}^m$ a univariate degree $d$
+polynomial.</p>
+<p>$$
+\boxed{
+\begin{aligned}
+&amp;\text{\bf{The Low Degree Test:}}\cr
+&amp;\text{Pick a random line } l \text{ in } \mathbb{F}^m\cr
+&amp;\text{and read the univariate polynomial, say } p_l(t)\cr
+&amp;\text{which the given \textit{d-oracle} contains for this line.}\cr
+&amp;\text{Randomly pick a point $x$ on line $l$ and check}\cr
+&amp;\text{whether $p_l$ correctly describes $f$ at $x$.}\cr
+&amp;\text{If so, ACCEPT, else REJECT}
+\end{aligned}
+}
+$$</p>
+<p>The Test from the paper [AS03] is not interactive, and assumes the oracle
+access to the whole $\textit{d-oracle}$ table. So here are a few ideas
+to take this description to the PCS protocol from The Book:</p>
+<ol>
+<li>At the beginning of the protocol $\mathcal{P}$ commits to the Merkle
+tree of the string of $f$ evaluations and to the claimed degree $d$
+of $f$ by sending these values to $\mathcal{V}$.</li>
+<li>$\mathcal{V}$ picks a random line $l$ in $\mathbb{F}^m$ and sends
+it to $\mathcal{P}$.</li>
+<li>$\mathcal{P}$ replies with a univariate polynomial $p_l$ which
+it claims to be a restriction of $f$ to $l$.</li>
+<li>$\mathcal{V}$ generates a random $x \in \mathbb{F}$. Then it
+evaluates line $l$ on $x$ to obtain a point in $\mathbb{F}^m$.
+$\mathcal{V}$ sends this point to $\mathcal{P}$ and $\mathcal{P}$
+replies with a corresponding value from $s$ and with the proof this
+evaluation's membership in the Merkle tree which was previously
+committed to by $\mathcal{P}$.</li>
+<li>$\mathcal{V}$ checks that $p_l(x)$ equals the received value from $s$
+and that this value belongs to the Merkle tree.</li>
+</ol>
+<h2 id="implementation">Implementation</h2>
+<p>Restricting a polynomial to a line has been described and implemented
+in a <a href="https://montekki.github.io/thaler-ch4-4/">previous post on GKR</a>. What
+we need is the machinery to merkelize the evaluations string $s$.</p>
+<h3 id="all-values-of-mathbb-f">All Values of $\mathbb{F}$</h3>
+<p>First we need to be able to evaluate our function $f$ on all values in $\mathbb{F}^m$.
+It would be great to introduce a helper trait that would allow the code to iterate
+over all possible values of $\mathbb{F}$:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #928374;font-style: italic;">/// Iterate over all possible values of a finite field.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> IF</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    type</span><span style="color: #FABD2F;"> Values</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> IntoIterator</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Item</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> Self</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> all_values</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #83A598;"> Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Values</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>Now in order to turn all values in $\mathbb{F}$ into all values in $\mathbb{F}^m$
+we need to build all permutations of values in $\mathbb{F}$ of length $m$. Since building
+such permutations is not the topic of this post the readily available code can be used to
+extend the above trait with a helper function:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> IF</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    type</span><span style="color: #FABD2F;"> Values</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> IntoIterator</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Item</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> Self</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> all_values</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #83A598;"> Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Values</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> all_multidimentional_values</span><span style="color: #A89984;">(</span><span style="color: #83A598;">m</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">Self</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            permutations</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">permutations</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">all_values</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into_iter</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">collect</span><span style="color: #8EC07C;">::</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">&gt;&gt;(),</span><span style="color: #83A598;"> m</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        res</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">sort</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        res</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h3 id="prover">Prover</h3>
+<p>$\mathcal{P}$ is initialized with some polynomial $f$, our implementation as usual
+is going to be quite generic. Here, it is being generic over a field $\mathbb{F}$,
+the $f$ and the parameters of the Merkle tree:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> Prover</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> M</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> MultilinearExtension</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Leaf</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    tree</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> MerkleTree</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    values_convenience_map</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> HashMap</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    poly</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> M</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    values</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>The implementation allows any <code>MerkleTree</code> configuration to be used with only
+restriction that the leafs of the tree have to be elements in $\mathbb{F}$.
+Also <code>Prover</code> holds a convenience map from $\mathbb{F}^m$ to indices in the
+evaluations string $s$.</p>
+<p>Now to create a new $\mathcal{P}$ and populate all the fields in the above struct
+a fairly involved logic has to be implemented:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #D3869B;font-weight: bold;"> IF</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> M</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> MultilinearExtension</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Leaf</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">&gt;&gt;</span><span style="color: #FABD2F;"> Prover</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> M</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// Create a new Prover.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> new</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        poly</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> M</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        leaf_chr_params</span><span style="color: #8EC07C;">:</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">LeafHash</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> CRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Parameters</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        two_to_one_params</span><span style="color: #8EC07C;">:</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">TwoToOneHash</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> TwoToOneCRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Parameters</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    )</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">Self</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> all_values</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">all_multidimentional_values</span><span style="color: #A89984;">(</span><span style="color: #83A598;">poly</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">());</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        // Populate s</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> all_poly_values</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">&gt;&gt;</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> all_values</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">value</span><span style="color: #FB4934;">|</span><span style="color: #83A598;"> poly</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #83A598;">value</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">ok_or</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">Error</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">PolyEvalDimMismatch</span><span style="color: #A89984;">))</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> all_poly_values</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> all_poly_values</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        // Length of array for `MerkleTree` has to be a power of two, so</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        // extend s with zeros up to that length.</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> all_values_len</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> all_poly_values</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> values</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> all_poly_values</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">cloned</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">chain</span><span style="color: #A89984;">((</span><span style="color: #83A598;">all_values_len</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">all_values_len</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">next_power_of_two</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">_</span><span style="color: #FB4934;">|</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">()))</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        // Build a convenience indexing map</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> values_convenience_map</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> all_values</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">enumerate</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #A89984;">(</span><span style="color: #83A598;">i</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> value</span><span style="color: #A89984;">)</span><span style="color: #FB4934;">|</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">value</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">clone</span><span style="color: #A89984;">(),</span><span style="color: #83A598;"> i</span><span style="color: #A89984;">))</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        // Build a MerkleTree.</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> tree</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> MerkleTree</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            MerkleTree</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">leaf_chr_params</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">two_to_one_params</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> values</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">clone</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Ok</span><span style="color: #A89984;">(</span><span style="color: #83A598;">Self</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            tree</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            poly</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            values_convenience_map</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            values</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        })</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>To complete the implementation of $\mathcal{P}$ three functions have to be added:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// Get the merkle root.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> merkle_root</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">InnerDigest</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span>tree</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">root</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// Restrict to line.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> poly_restriction_to_line</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> b</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span><span style="color: #83A598;"> c</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        restrict_poly</span><span style="color: #A89984;">(</span><span style="color: #83A598;">b</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> c</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>poly</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// Challenge</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> challenge</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> point</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;(</span><span style="color: #FABD2F;">Path</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">&gt;,</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">)&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> point_index</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>values_convenience_map</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">get</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Ok</span><span style="color: #A89984;">((</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>tree</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">generate_proof</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">*</span><span style="color: #83A598;">point_index</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>values</span><span style="color: #A89984;">[</span><span style="color: #8EC07C;">*</span><span style="color: #83A598;">point_index</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        ))</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>First one returns the root of the Merkle tree of $s$ $\mathcal{P}$ commits to at
+the beginning of the protocol.</p>
+<p>The second one restricts committed $f$ to a random line $x$ picked by $\mathcal{V}$.</p>
+<p>The third one answers $\mathcal{V}$'s request to revel $s$ value at a given point
+along with the proof of this value's membership in the committed Merkle tree.</p>
+<h3 id="verifier">Verifier</h3>
+<p>The $\mathcal{V}$ is going to hold quite a lot of data:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #928374;font-style: italic;">/// The Verifier in the Relaxed PCS protocol.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> Verifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Leaf</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    x</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    degree</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    challenge_point</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    line</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    num_vars</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    prover_univariate</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    merkle_root</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">InnerDigest</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    leaf_chr_params</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> LeafParam</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    two_to_one_params</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> TwoToOneParam</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>When a new $\mathcal{V}$ is created it has to be initialized with the
+values of degree $d$ and the root of the Merkle Tree of $s$ $\mathcal{P}$ has committed to:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Leaf</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">&gt;&gt;</span><span style="color: #FABD2F;"> Verifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// Create a new Verifier.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> new</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        num_vars</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        degree</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        merkle_root</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">InnerDigest</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        leaf_chr_params</span><span style="color: #8EC07C;">:</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">LeafHash</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> CRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Parameters</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        two_to_one_params</span><span style="color: #8EC07C;">:</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> Config</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">TwoToOneHash</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> TwoToOneCRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Parameters</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    )</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #83A598;"> Self</span><span style="color: #A89984;"> {</span></span></code></pre>
+<p>Then it picks the random line in $\mathbb{F}^m$ to send it to the $\mathcal{P}$.
+To do so $\mathcal{V}$ generates two random points in $\mathbb{F}^m$ and uses the
+function <code>line</code> implemented earlier for the GKR protocol:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> random_line</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">R</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Rng</span><span style="color: #A89984;">&gt;(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> rng</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #A89984;"> (</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;) {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> b</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> (</span><span style="color: #D3869B;">0</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>num_vars</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">_</span><span style="color: #FB4934;">|</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">rand</span><span style="color: #A89984;">(</span><span style="color: #83A598;">rng</span><span style="color: #A89984;">))</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> c</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> (</span><span style="color: #D3869B;">0</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>num_vars</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">_</span><span style="color: #FB4934;">|</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">rand</span><span style="color: #A89984;">(</span><span style="color: #83A598;">rng</span><span style="color: #A89984;">))</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span>line </span><span style="color: #8EC07C;">=</span><span style="color: #FABD2F;"> line</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">b</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">c</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        (</span><span style="color: #83A598;">b</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> c</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>When $\mathcal{P}$ has sent a univariate polynomial $p_l$ claimed to be a restriction
+of $f$ to the line generated earlier, $\mathcal{V}$ checks its degree and saves to
+evaluate it later:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> committed_univariate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> p</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;()&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if</span><span style="color: #83A598;"> p</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">degree</span><span style="color: #A89984;">() &gt;</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>degree </span><span style="color: #A89984;">{</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">            return</span><span style="color: #FABD2F;"> Err</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">Error</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">DegreeMismatch</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span>prover_univariate </span><span style="color: #8EC07C;">=</span><span style="color: #FABD2F;"> Some</span><span style="color: #A89984;">(</span><span style="color: #83A598;">p</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Ok</span><span style="color: #A89984;">(())</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>Then $\mathcal{V}$ needs to pick a random point along the picked line $l$ and send it
+to $\mathcal{P}$ querying the corresponding value in $s$ along with the proof:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// Challenge the prover at some point.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> challenge_prover</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">R</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Rng</span><span style="color: #A89984;">&gt;(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> rng</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span>x </span><span style="color: #8EC07C;">=</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">rand</span><span style="color: #A89984;">(</span><span style="color: #83A598;">rng</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span>challenge_point </span><span style="color: #8EC07C;">=</span><span style="color: #83A598;"> self</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span>line</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">poly</span><span style="color: #FB4934;">|</span><span style="color: #83A598;"> poly</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>x</span><span style="color: #A89984;">))</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span>challenge_point</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">clone</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>Finally the $\mathcal{P}$'s reply has to be verified against the earlier
+committed root of Merkle Tree of $f$ and also $\mathcal{V}$ needs to check
+that value from $s$ $\mathcal{P}$ has replied with equals $p_l(x)$:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// Verify the prover&#39;s reply.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> verify_prover_reply</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> path</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Path</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">P</span><span style="color: #A89984;">&gt;,</span><span style="color: #83A598;"> leaf</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;()&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        path</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">verify</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            &amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>leaf_chr_params</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            &amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>two_to_one_params</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            &amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>merkle_root</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            leaf</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        )</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> eval</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span>prover_univariate</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">as_ref</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">ok_or</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">Error</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">NoProverPoly</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>x</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if</span><span style="color: #83A598;"> leaf</span><span style="color: #8EC07C;"> !=</span><span style="color: #83A598;"> eval</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">            return</span><span style="color: #FABD2F;"> Err</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">Error</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">EvalMismatch</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                format!</span><span style="color: #A89984;">(&quot;{</span><span style="color: #B8BB26;">:?</span><span style="color: #A89984;">}&quot;,</span><span style="color: #83A598;"> leaf</span><span style="color: #A89984;">),</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                format!</span><span style="color: #A89984;">(&quot;{</span><span style="color: #B8BB26;">:?</span><span style="color: #A89984;">}&quot;,</span><span style="color: #83A598;"> eval</span><span style="color: #A89984;">),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            ));</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Ok</span><span style="color: #A89984;">(())</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre><h3 id="testing">Testing</h3>
+<p>The testing code configures the Merkle Trees the same way testing code in
+<a rel="external" href="https://github.com/arkworks-rs/crypto-primitives/blob/release-0.4/src/merkle_tree/tests/mod.rs"><code>ark-crypto-primitives</code></a>
+does with the only exception is that the implementation of <code>Config</code> is generic
+over field $\mathbb{F}$ and uses a wrapper for a hasher to go from this generic
+field type to bytes for hash convenience:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FE8019;">    type</span><span style="color: #FABD2F;"> LeafH</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> pedersen</span><span style="color: #8EC07C;">::</span><span style="color: #D3869B;font-weight: bold;">CRH</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">JubJub</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> Window4x256</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    struct</span><span style="color: #FABD2F;"> CHROverField</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        __f</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> PhantomData</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> CRHScheme</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> CHROverField</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> Input</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> Output</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> &lt;</span><span style="color: #FABD2F;">LeafH</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> CRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Output</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> Parameters</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> &lt;</span><span style="color: #FABD2F;">LeafH</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> CRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Parameters</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        fn</span><span style="color: #FABD2F;"> setup</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">R</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Rng</span><span style="color: #A89984;">&gt;(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            r</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        )</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> std</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">result</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Result</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Parameters</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> ark_crypto_primitives</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Error</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            LeafH</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">setup</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        fn</span><span style="color: #FABD2F;"> evaluate</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">T</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Borrow</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Input</span><span style="color: #A89984;">&gt;&gt;(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            parameters</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #83A598;">Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Parameters</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            input</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> T</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        )</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> std</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">result</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Result</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Output</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> ark_crypto_primitives</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Error</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> bytes</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> to_uncompressed_bytes!</span><span style="color: #A89984;">(</span><span style="color: #83A598;">input</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">map_err</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">_</span><span style="color: #FB4934;">|</span><span style="color: #FABD2F;"> Box</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">Error</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">ToBytesError</span><span style="color: #A89984;">))</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            LeafH</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #83A598;">parameters</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> bytes</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">as_ref</span><span style="color: #A89984;">())</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>This way in the config for the merkle tree the associated <code>Leaf</code> type can be our field
+and not the <code>[u8]</code> slice:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FE8019;">    struct</span><span style="color: #FABD2F;"> JubJubMerkleTreeParamsFp5</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    impl</span><span style="color: #FABD2F;"> Config</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> JubJubMerkleTreeParamsFp5</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> Leaf</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Fp5</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> LeafDigest</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> &lt;</span><span style="color: #FABD2F;">LeafH</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> CRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Output</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> LeafInnerDigestConverter</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> ByteDigestConverter</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">Self</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">LeafDigest</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> InnerDigest</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> &lt;</span><span style="color: #FABD2F;">CompressH</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> TwoToOneCRHScheme</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Output</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> LeafHash</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> CHROverField</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Fp5</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        type</span><span style="color: #FABD2F;"> TwoToOneHash</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> CompressH</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre><h2 id="conclusion">Conclusion</h2>
+<p>In this a first Succinct Argument from The Book has been implemented.
+The implementation is available at
+<a rel="external" href="https://github.com/montekki/thaler-study/commit/b73f65d33d5b00d19b286901ad754859d200337c"><code>b73f65d</code></a>.
+As always the implementation has been made extremely generic over
+everything and turned out quite good I believe. Thank you for reading
+and stay tuned for the future posts!</p>
+<hr />
+<p>Reference List.</p>
+<p><a rel="external" href="https://www.youtube.com/watch?v=HQ9wTGBGNRU">YouTube: Log Degree Testing - Alessandro Chiesa</a></p>
+<p><a rel="external" href="http://people.csail.mit.edu/ronitt/papers/rs.pdf">Robust Characterizations of Polynomials with Applications to Program Testing</a></p>
+<p><a rel="external" href="http://people.csail.mit.edu/madhu/papers/1997/arora-conf.pdf">Improved Low-Degree testing and its applications</a></p>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2026-02-03T05:12:23.965097880+00:00">2022-2026</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>

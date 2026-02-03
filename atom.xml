@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title></title>
+    <link rel="self" type="application/atom+xml" href="https://montekki.github.io/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://montekki.github.io"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2023-01-09T00:00:00+00:00</updated>
+    <id>https://montekki.github.io/atom.xml</id>
+    <entry xml:lang="en">
+        <title>A (Relaxed) PCS by Merkle Trees and Low-Degree Tests</title>
+        <published>2023-01-09T00:00:00+00:00</published>
+        <updated>2023-01-09T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://montekki.github.io/thaler-ch7-1/"/>
+        <id>https://montekki.github.io/thaler-ch7-1/</id>
+        
+        <summary type="html">&lt;p&gt;Chapter three dives into a first Succinct Argument of Circuit
+Satisfiability. It does so by introducing what it calls a Relaxed
+Polynomial Commitment Scheme that combines Merkle Trees and
+Low-Degree tests. Implementing a first Succinct Argument sounds
+like an interesting challenge, let&#x27;s find out.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>An Unnecessarily Generic Fiat-Shamir Transformation</title>
+        <published>2022-12-13T00:00:00+00:00</published>
+        <updated>2022-12-13T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://montekki.github.io/thaler-ch5-1/"/>
+        <id>https://montekki.github.io/thaler-ch5-1/</id>
+        
+        <summary type="html">&lt;p&gt;The protocols we&#x27;ve taken a look so far are the Interactive Proofs.
+A Fiat-Shamir Transformation offers a way to turn any such protocol
+into a non-interactive one. That sounds extremely useful for almost
+all real-world scenarios and is worth looking into. But how far can
+the boundaries of the implementation generality be pushed?
+Let&#x27;s find out.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>The GKR Protocol</title>
+        <published>2022-12-06T00:00:00+00:00</published>
+        <updated>2022-12-06T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://montekki.github.io/thaler-ch4-4/"/>
+        <id>https://montekki.github.io/thaler-ch4-4/</id>
+        
+        <summary type="html">&lt;p&gt;It has been a long time since the last post but it is
+finally time to play around with the last major protocol from
+Chapter 4 in The Book: the GKR protocol. It will involve running
+a protocol inside another protocol, let&#x27;s go.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Efficient IP for MatMult</title>
+        <published>2022-09-09T00:00:00+00:00</published>
+        <updated>2022-09-09T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://montekki.github.io/thaler-ch4-3/"/>
+        <id>https://montekki.github.io/thaler-ch4-3/</id>
+        
+        <summary type="html">&lt;p&gt;Hi how about some performance? In Chapter 4 the book first introduces
+a regular MatMult IP that has already been implemented in
+&lt;a href=&quot;https:&#x2F;&#x2F;montekki.github.io&#x2F;thaler-ch4-2&#x2F;&quot;&gt;previous post&lt;&#x2F;a&gt; and then discusses
+the performance improvements to it. Should be fun, let&#x27;s dive right in.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Generalizing Sum Check protocol and counting the triangles</title>
+        <published>2022-08-22T00:00:00+00:00</published>
+        <updated>2022-08-22T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://montekki.github.io/thaler-ch4-2/"/>
+        <id>https://montekki.github.io/thaler-ch4-2/</id>
+        
+        <summary type="html">&lt;p&gt;Welcome back. In the &lt;a href=&quot;https:&#x2F;&#x2F;montekki.github.io&#x2F;thaler-ch4-1&#x2F;&quot;&gt;previous post&lt;&#x2F;a&gt; we have
+taken a first look at the Sum Check protocol from The Book and implemented
+it for the case of &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;ark-poly&#x2F;0.3.0&#x2F;ark_poly&#x2F;polynomial&#x2F;multivariate&#x2F;struct.SparsePolynomial.html&quot;&gt;&lt;code&gt;multivariate::SparsePolynomial&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;.
+In this post I am going to attempt to generalize the protocol to
+any polynomial and apply it to the Counting Triangles in Graphs problem.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Implementing Sum Check protocol in Rust</title>
+        <published>2022-07-06T00:00:00+00:00</published>
+        <updated>2022-07-06T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://montekki.github.io/thaler-ch4-1/"/>
+        <id>https://montekki.github.io/thaler-ch4-1/</id>
+        
+        <summary type="html">&lt;p&gt;This post is going go into reading the Sum Check protocol from the book
+and discussing a naive implementation of the described protocol in Rust.
+Again as in &lt;a href=&quot;https:&#x2F;&#x2F;montekki.github.io&#x2F;thaler-ch3&#x2F;&quot;&gt;previous post&lt;&#x2F;a&gt; the main goal of the
+post is going to be so to speak &quot;gluing&quot; together the math text
+and the implementation in software.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Evaluating multilinear extensions with Rust</title>
+        <published>2022-06-24T00:00:00+00:00</published>
+        <updated>2022-06-24T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://montekki.github.io/thaler-ch3/"/>
+        <id>https://montekki.github.io/thaler-ch3/</id>
+        
+        <summary type="html">&lt;p&gt;Hi there! This is a first post in a series where I am planning to take notes
+on &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;people.cs.georgetown.edu&#x2F;jthaler&#x2F;ProofsArgsAndZK.html&quot;&gt;Proofs, Arguments and Zero-Knowledge&lt;&#x2F;a&gt;
+as I am reading it. I write code in Rust for a living so
+I am going to use this language to implement algorithms and protocols from the book.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+</feed>

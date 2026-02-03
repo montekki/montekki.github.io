@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+<title>An Unnecessarily Generic Fiat-Shamir Transformation</title>
+
+
+
+<meta property="og:title" content="An Unnecessarily Generic Fiat-Shamir Transformation">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+
+
+<link rel="canonical" href="https://montekki.github.io/thaler-ch5-1/">
+<meta property="og:url" content="https://montekki.github.io/thaler-ch5-1/">
+
+
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+  
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2022-12-13T00:00:00+00:00">
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image"">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+
+
+
+  <meta property="twitter:title" content="An Unnecessarily Generic Fiat-Shamir Transformation">
+
+
+
+  <meta name="twitter:site" content="@m0nt3kk1">
+  
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "author": {
+    "@type":"Person",
+	  "name":"Fedor Sakharov"
+  },
+  "description": "",
+  "url": "https://montekki.github.io/thaler-ch5-1/",
+  "@context":"https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "An Unnecessarily Generic Fiat-Shamir Transformation"
+  
+    
+    
+      "datePublished":"2022-12-13T00:00:00+00:00",
+    
+    ,
+    "mainEntityOfPage":{
+      "@type":"WebPage",
+      "@id":"https://montekki.github.io/thaler-ch5-1/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+                                                                                                                                                                                                            <script>
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title"></h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2022-12-13">December 13, 2022</time>
+  	</div>
+  	<h1 class="post-title">An Unnecessarily Generic Fiat-Shamir Transformation</h1>
+  	<div class="post-line"></div>
+  	<p>The protocols we've taken a look so far are the Interactive Proofs.
+A Fiat-Shamir Transformation offers a way to turn any such protocol
+into a non-interactive one. That sounds extremely useful for almost
+all real-world scenarios and is worth looking into. But how far can
+the boundaries of the implementation generality be pushed?
+Let's find out.</p>
+<span id="continue-reading"></span>
+<p>Let's have a look at the diagram of the Transformation from The Book:</p>
+<p><img src="../fiat_shamir_transform.jpg" alt="Fiat-Shamir Transformation" /></p>
+<p>Recall what happens in an Interactive Protocol is the message
+exchange between the Prover and the Verifier where $\mathcal{P}$
+sends some messages to $\mathcal{V}$ and $\mathcal{V}$ replies
+with random challenges $r_i$. Also there is an asymmetry to
+this exchange: $\mathcal{P}$ sends one message more than
+$\mathcal{V}$.</p>
+<p>The idea behind the Fiat-Shamir Transformation is that one can
+"pre-generate" all the random $r_i$ numbers using the hashing
+of the $\mathcal{P}$'s claims and that these numbers are considered
+secure enough. By using this sort of hashing $\mathcal{P}$
+and $\mathcal{V}$ arrive at the same numbers in the non-interactive
+manner.</p>
+<h2 id="but-what-exactly-do-we-need-to-hash">But what exactly do we need to hash?</h2>
+<p>The Books mentions a number of vulnerable implementations of
+the Fiat-Shamir transformations that happened mainly due to the
+fact that now all important information was hashed leading to critical
+vulnerabilities.</p>
+<p>I've asked <a rel="external" href="https://twitter.com/SuccinctJT">Justin</a> on Discord about
+what needs to go into the hashes each round and why and the
+answers are worth being saved here otherwise they will disappear
+in the abyss of unindexed Discord content:</p>
+<blockquote>
+<p>GUJustin — 20:07</p>
+<p>in GKR x would be the public input to the circuit. E.g., if P wants
+to prove it knows a pre-image z of a designated output y of a hash
+function h, then x would be the designated output y, and the circuit
+would take as input y and check whether h(z)=y</p>
+<p>if the cheating prover can also choose the circuit that GKR gets applied
+to, then one really should include a description of the circuit in the
+Fiat-Shamir hash too</p>
+<p>basically if the adversary can choose some aspect of the statement being
+proved at will, then you really should hash it if using Fiat-Shamir</p>
+<p>GUJustin — 20:10</p>
+<p>this fends off attacks of the form whereby the attacker tries just once,
+unsuccessfully, to generate a convincing proof of a false statement and
+then simply alters the unhashed aspect of the proof system to make the
+transcript into an accepting one</p>
+<p>GUJustin — 20:11</p>
+<p>if that claim is coming from the untrusted prover itself then absolutely.</p>
+<p>montekki — 20:21</p>
+<p>not sure I follow: my understanding is that in this setup there would be
+a circuit that computes h, the z would be the claimed inputs and the y
+would be the claimed outputs? So P starts with sending y and then the
+protocol goes all the way back to checking z at the last step?</p>
+<p>GUJustin — 20:48</p>
+<p>that all sounds right, but in a succinct argument, P wouldn't send z to
+the verifier explicitly. Rather, P would start the argument by
+cryptographically committing to a (low-degree extension polynomial of) z.</p>
+<p>in this setting we are typically thinking of h as not determined by the
+adversary (e.g., h is SHA256 or some other standard hash function the
+adversary had no control over), but y and z are determined by the adversary</p>
+<p>think of y and the cryptographic commitment to z as the prover's first
+message in the protocol</p>
+<p>from that perspective, of course Fiat-Shamir is going to hash both y and the commitment to z</p>
+<p>and if h (and the circuit C computing h) are outside of the control of
+the adversary, then we do not have to hash a description of h or C</p>
+</blockquote>
+<h2 id="mocking-randomness">Mocking randomness</h2>
+<p>The Interactive Verifiers need to draw random numbers from some
+source of randomness and send them as challenges to the Provers:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub fn</span><span style="color: #FABD2F;"> round</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">R</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Rng</span><span style="color: #A89984;">&gt;(</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">    &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    g_j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    rng</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">VerifierRoundResult</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span><span style="color: #FABD2F;"> Error</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> r_j</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">rand</span><span style="color: #A89984;">(</span><span style="color: #83A598;">rng</span><span style="color: #A89984;">);</span></span></code></pre>
+<p>For instance this is what the <code>round</code> of Sum-Check does, drawing
+$r_j$ from some generator that implements <code>Rng</code>. But when
+"Fiat-Shamirizing" the protocol the generator <code>Rng</code> is no longer
+needed and the $r_j$ results from hashing have to be used.There
+are many ways one could think of to do that.</p>
+<p>For instance, one could modify the protocol to pre-generate a set of random
+numbers of necessary size beforehand and use $i$-th generated
+number at round $i$. Then, when "Fiat-Shamirizing" this code
+the array of randomly generated values could be substituted with
+the derived from hashing one.</p>
+<p>Or one could implement the <code>Rng</code> trait for some type of non-random
+generator that would give out predefined numbers to the user.</p>
+<p>But for my previous implementation there exists a least-invasive
+way to do this: to create a simple trait that describes generation
+of a next random field element <code>F</code>:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> RngF</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> draw</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>And implement it for any type that implements <code>Rng</code> so it would stack
+with existing code nicely:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> T</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Rng</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> RngF</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> T</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> draw</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">rand</span><span style="color: #A89984;">(</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>And if we want to feed pre-generated numbers to any user of this
+trait we can do it with a following simple type:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> RandNums</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    nums</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    current</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> RandNums</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> new</span><span style="color: #A89984;">(</span><span style="color: #83A598;">nums</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #83A598;"> Self</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        Self</span><span style="color: #A89984;"> {</span><span style="color: #83A598;"> nums</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> current</span><span style="color: #8EC07C;">:</span><span style="color: #D3869B;"> 0</span><span style="color: #A89984;"> }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Copy</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> RngF</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> RandNums</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">    /// TODO: This will obviously panic when goes off bounds.</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> draw</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>nums</span><span style="color: #A89984;">[</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>current</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span>current </span><span style="color: #8EC07C;">+=</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        res</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h2 id="going-generic">Going generic</h2>
+<p>Great, now how can this simple transformation be implemented? By looking
+at the Figure above there are several things one can notice:</p>
+<ol>
+<li>There is hashing happening. Hashing is usually done to bytes.</li>
+<li>It is opaque to the types of $g_i$, they depend on the protocol and as such in case of Sum-Check $g_i$ may be the univariate polynomials, or in case of Schnorr protocol they may be big numbers.</li>
+<li>All relevant information such as $\mathcal{P}$ claims and everything
+has to go into the hash.</li>
+</ol>
+<p>It would make sense to create a top layer of this protocol that
+would not know the details of the exact protocol being "Fiat-Shamirized"
+that would implement all manipulations and hashing with the serialized
+$g_i$ in form of byte vectors.</p>
+<p>For that the exact $\mathcal{P}$ and $\mathcal{V}$ can be abstracted
+with the following traits:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> InteractiveProver</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> g_1</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">&gt;&gt;;</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> round</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> r_j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">&gt;&gt;;</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> num_rounds</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> InteractiveVerifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> R</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> RngF</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> round</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> g_j</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">],</span><span style="color: #83A598;"> rng</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">bool</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>So the idea that $\mathcal{P}$ and $\mathcal{V}$ are exchanging serialized
+messages with <code>round</code> methods. One thing is that for the first
+round of $\mathcal{P}$ a method $g_1$ is needed to reflect
+the asymmetry of the protocol ($\mathcal{P}$ sends one more message then
+$\mathcal{V}$ does).</p>
+<p>And the transcript would be just $\lbrace g_1, \cdots, g_l \rbrace$
+in serialized form:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> FiatShamirTranscript</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    g</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">&gt;&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>Now a Sum-Check protocol implementation can be used as an example
+of implementation of the above traits:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;</span><span style="color: #FABD2F;"> InteractiveProver</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> sum_check_protocol</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Prover</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> g_1</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> vec!</span><span style="color: #A89984;">[];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> p</span><span style="color: #8EC07C;">:</span><span style="color: #A89984;"> (</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;)</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">c_1</span><span style="color: #A89984;">(),</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">round</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">(),</span><span style="color: #D3869B;"> 0</span><span style="color: #A89984;">));</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">        p</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">serialize_uncompressed</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> res</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Ok</span><span style="color: #A89984;">(</span><span style="color: #83A598;">res</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> round</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> r_j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> vec!</span><span style="color: #A89984;">[];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        sum_check_protocol</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Prover</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">round</span><span style="color: #A89984;">(</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> r_j</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">serialize_uncompressed</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> res</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Ok</span><span style="color: #A89984;">(</span><span style="color: #83A598;">res</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> num_rounds</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>So here on the first step to send message $g_1$ we need to pack
+two things on it</p>
+<ol>
+<li>Prover's claim $C_1$</li>
+<li>The first univariate polynomial $\mathcal{P}$ sends to the $\mathcal{V}$</li>
+</ol>
+<p>And mirroring this logic on the $\mathcal{V}$ side:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> R</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> RngF</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;</span><span style="color: #FABD2F;"> InteractiveVerifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">&gt;</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #FABD2F;"> sum_check_protocol</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Verifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #A89984;">&gt;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">{</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> round</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #FE8019;">mut</span><span style="color: #83A598;"> self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> g_j</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">u8</span><span style="color: #A89984;">],</span><span style="color: #83A598;"> rng</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> R</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">bool</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if</span><span style="color: #83A598;"> j</span><span style="color: #8EC07C;"> ==</span><span style="color: #D3869B;"> 0</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> c_1</span><span style="color: #8EC07C;">:</span><span style="color: #A89984;"> (</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;)</span><span style="color: #8EC07C;"> =</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                CanonicalDeserialize</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">deserialize_uncompressed</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g_j</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">set_c_1</span><span style="color: #A89984;">(</span><span style="color: #83A598;">c_1</span><span style="color: #8EC07C;">.</span><span style="color: #D3869B;">0</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">round</span><span style="color: #A89984;">(</span><span style="color: #83A598;">c_1</span><span style="color: #8EC07C;">.</span><span style="color: #D3869B;">1</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> rng</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">            return</span><span style="color: #FABD2F;"> Ok</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">true</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> g_j</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            CanonicalDeserialize</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">deserialize_uncompressed</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g_j</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        match</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">round</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g_j</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> rng</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            sum_check_protocol</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">VerifierRoundResult</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">JthRound</span><span style="color: #A89984;">(</span><span style="color: #83A598;">_</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #FABD2F;"> Ok</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">true</span><span style="color: #A89984;">),</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            sum_check_protocol</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">VerifierRoundResult</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">FinalRound</span><span style="color: #A89984;">(</span><span style="color: #83A598;">res</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #FABD2F;"> Ok</span><span style="color: #A89984;">(</span><span style="color: #83A598;">res</span><span style="color: #A89984;">),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>In the first round we expect $g_1$ to be byte-serialized tuple
+$(C_1, g_1(X_1))$.</p>
+<h2 id="generating-and-verifying-the-fiat-shamir-transcript">Generating and Verifying the Fiat-Shamir Transcript</h2>
+<p>Now, the random numbers $r_i$ need to be generated from the above
+transcript by hashing the first $i$ of them at round $i$. Thankfully
+the current tip of <code>arkworks</code> library contains very useful utilities
+for that, namely a trait <code>HashToField</code> that would do exactly what we
+need here. With that the implementation of verification for the
+above verifier trait would look as follows:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub fn</span><span style="color: #FABD2F;"> verify_transcript</span><span style="color: #A89984;">&lt;</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    V</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> InteractiveVerifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> RandNums</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;,</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    H</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> HashToField</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    transcript</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> FiatShamirTranscript</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    verifier</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> V</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Result</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">bool</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> verifier</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> verifier</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> hasher</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> H</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #A89984;">[]);</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> hash_input</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> vec!</span><span style="color: #A89984;">[];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #83A598;"> j</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 0</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">transcript</span><span style="color: #8EC07C;">.</span><span>g</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        hash_input</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">extend_from_slice</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">transcript</span><span style="color: #8EC07C;">.</span><span>g</span><span style="color: #A89984;">[</span><span style="color: #83A598;">j</span><span style="color: #A89984;">]);</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> r_j</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> hasher</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">hash_to_field</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">hash_input</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">)[</span><span style="color: #D3869B;">0</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if !</span><span style="color: #83A598;">verifier</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">round</span><span style="color: #A89984;">(</span><span style="color: #83A598;">j</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">transcript</span><span style="color: #8EC07C;">.</span><span>g</span><span style="color: #A89984;">[</span><span style="color: #83A598;">j</span><span style="color: #A89984;">],</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> RandNums</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">vec!</span><span style="color: #A89984;">[</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">]))</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">            return</span><span style="color: #FABD2F;"> Ok</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">false</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    Ok</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">true</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>As you may see here the logic is pretty straightforward: each
+round the context of <code>HashToField</code> is extended with a new
+byte slice of $g_i$. Then it is used to generate the new random
+$r_i$ that is fed into the <code>InteractiveVerifier</code>.</p>
+<h2 id="testing-the-transformation">Testing the Transformation</h2>
+<p>To test the Transformation it is suggested to cannibalize the
+randomized test from the original Sum-Check implementation:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #A89984;">#[</span><span>test</span><span style="color: #A89984;">]</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> it_works</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    use</span><span style="color: #FABD2F;"> sha2</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">Sha256</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> rng</span><span style="color: #8EC07C;"> = &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> test_rng</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #83A598;"> n</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 2</span><span style="color: #8EC07C;">..</span><span style="color: #D3869B;">10</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> g</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> rand_poly</span><span style="color: #8EC07C;">::</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> Fp5</span><span style="color: #A89984;">&gt;(</span><span style="color: #83A598;">n</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> 3</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> rng</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> prover</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Prover</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">clone</span><span style="color: #A89984;">());</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> verifier</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Verifier</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #83A598;">n</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> Some</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g</span><span style="color: #A89984;">));</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> transcript</span><span style="color: #8EC07C;"> =</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            generate_transcript</span><span style="color: #8EC07C;">::</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> _</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> DefaultFieldHasher</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Sha256</span><span style="color: #A89984;">&gt;&gt;(</span><span style="color: #83A598;">prover</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        assert!</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            verify_transcript</span><span style="color: #8EC07C;">::</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> _</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> DefaultFieldHasher</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Sha256</span><span style="color: #A89984;">&gt;&gt;(</span><span style="color: #83A598;">transcript</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> verifier</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        )</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h2 id="conclusion">Conclusion</h2>
+<p>We have experimented with generalizing the Fiat-Shamir transformation.
+So far the code I've seen implemented in production does not bother
+with such complications and instead of being generic over everything
+just hashes an array of concrete inputs. But experimenting with
+writing generic and expandable code is always fun. Probably the above
+approach quite generic to be used for almost any IOP one could imagine.
+A fun exercise for the reader would be to use this implementation to
+"fiat-shamirize", say, the Schnorr protocol. As usual, the implementation
+is available <a rel="external" href="https://github.com/montekki/thaler-study/tree/master/fiat-shamir">in the repo</a>.</p>
+<hr />
+<p>Reference list.</p>
+<p><a rel="external" href="https://www.youtube.com/watch?v=9cagVtYstyY">YouTube: The Fiat-Shamir Transform - Ron Rothblum</a></p>
+<p><a rel="external" href="https://blog.trailofbits.com/2022/04/13/part-1-coordinated-disclosure-of-vulnerabilities-affecting-girault-bulletproofs-and-plonk/">Trail of Bits: Coordinated disclosure of vulnerabilities affecting Girault, Bulletproofs, and PlonK
+</a></p>
+<p><a rel="external" href="https://www.zkdocs.com/docs/zkdocs/protocol-primitives/fiat-shamir/">ZKDocs:
+Fiat-Shamir Transformation</a></p>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2026-02-03T05:12:23.965097880+00:00">2022-2026</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>

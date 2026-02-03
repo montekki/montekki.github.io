@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+<title>Generalizing Sum Check protocol and counting the triangles</title>
+
+
+
+<meta property="og:title" content="Generalizing Sum Check protocol and counting the triangles">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+
+
+<link rel="canonical" href="https://montekki.github.io/thaler-ch4-2/">
+<meta property="og:url" content="https://montekki.github.io/thaler-ch4-2/">
+
+
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+  
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2022-08-22T00:00:00+00:00">
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image"">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+
+
+
+  <meta property="twitter:title" content="Generalizing Sum Check protocol and counting the triangles">
+
+
+
+  <meta name="twitter:site" content="@m0nt3kk1">
+  
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "author": {
+    "@type":"Person",
+	  "name":"Fedor Sakharov"
+  },
+  "description": "",
+  "url": "https://montekki.github.io/thaler-ch4-2/",
+  "@context":"https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Generalizing Sum Check protocol and counting the triangles"
+  
+    
+    
+      "datePublished":"2022-08-22T00:00:00+00:00",
+    
+    ,
+    "mainEntityOfPage":{
+      "@type":"WebPage",
+      "@id":"https://montekki.github.io/thaler-ch4-2/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+                                                                                                                                                                                                            <script>
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title"></h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2022-08-22">August 22, 2022</time>
+  	</div>
+  	<h1 class="post-title">Generalizing Sum Check protocol and counting the triangles</h1>
+  	<div class="post-line"></div>
+  	<p>Welcome back. In the <a href="https://montekki.github.io/thaler-ch4-1/">previous post</a> we have
+taken a first look at the Sum Check protocol from The Book and implemented
+it for the case of <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/polynomial/multivariate/struct.SparsePolynomial.html"><code>multivariate::SparsePolynomial</code></a>.
+In this post I am going to attempt to generalize the protocol to
+any polynomial and apply it to the Counting Triangles in Graphs problem.</p>
+<span id="continue-reading"></span>
+<p>In the previous post an implementation of the Sum Check protocol for the
+special case of <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/polynomial/multivariate/struct.SparsePolynomial.html"><code>multivariate::SparsePolynomial</code></a> was described. But if you
+have been reading The Book or following the
+<a rel="external" href="https://www.youtube.com/watch?v=4_ALgSnUM20">online book reading group</a>
+you may already know that for the most interesting cases Sum Check protocol
+has to be applied some simple polynomial that would involve multiplying or
+summing multilinear extensions.</p>
+<p>So for the triangle counting problem the polynomial $g$ would take the form</p>
+<p>$$
+g(X, Y, Z) = \widetilde{f_A}(X, Y) \cdot \widetilde{f_A}(Y, Z) \cdot \widetilde{f_A}(X, Z)
+$$</p>
+<p>or in the case of GKR protocol $g$ would be</p>
+<p>$$
+f_{r_i}^{(i)}(b, c) = \widetilde{add}_i(r_i, b, c)
+(\widetilde{W}_{i+1}(b) + \widetilde{W}_{i+1}(c)) +
+\widetilde{mult}_i(r_i, b, c)
+(\widetilde{W}_{i+1}(b) \widetilde{W}_{i+1}(c))
+$$</p>
+<p>As you may see these polynomials are multiplications and additions of
+multilinear extensions of quite low degrees.</p>
+<p>It would be nice to somehow generalize the sum-check protocol to be
+able to deal with any polynomial type and the above polynomials in particular.
+Thankfully Rust has all the tools needed to perform this kind of abstraction.</p>
+<h2 id="abstracting-sum-check-protocol-over-the-type-of-polynomial">Abstracting Sum Check protocol over the type of polynomial</h2>
+<p>What actions does the Sum Check protocol perform with the given polynomial
+anyway?</p>
+<ol>
+<li>
+<p>First the protocol needs to know the number of variables in the polynomial.</p>
+</li>
+<li>
+<p>Then obviously the Verifier of the protocol has
+to be able to evaluate the polynomial at a random point at the end of
+the last round.</p>
+</li>
+<li>
+<p>Recall, that on the $j$-th round Prover fixes all but one variables
+in $g$ turning it into a univariate polynomial $g_j(X_j)$ being
+$$
+\sum_{(x_{j+1},...,x_{\nu}) \in \lbrace 0,1 \rbrace^{\nu - j}}
+g(r_i,...,r_{j-1},X_j,x_{j+1},...,x_{\nu})
+$$
+This suggests that the polynomial has to have a way to fix all but one variables.</p>
+</li>
+<li>
+<p>And finally there has to be a way to get the evaluations of this
+polynomial over the boolean hypercube. Summing these evaluations gives
+the value $c_1$ that Prover claims to be the true answer at the beginning
+of the first round.</p>
+</li>
+</ol>
+<p>These can be described as a trait in Rust like this:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> trait</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> point</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> to_univariate_at_point</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        &amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        at</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        point</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    )</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">univariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> num_vars</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> to_evaluations</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>For now some methods in this trait return <code>Option</code>-al values in case
+some errors happen for instance, if the dimension of the point does
+not match the dimension of the polynomial.</p>
+<p>Now, to reflect this change in the existing code of the Sum Check protocol
+that was implemented in the previous post all we have to do is implement
+the trait above for <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/polynomial/multivariate/struct.SparsePolynomial.html"><code>multivariate::SparsePolynomial</code></a>:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> multivariate</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> SparseTerm</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">    ...</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>and change <code>Prover</code> and <code>Verifier</code> to be generic over this new trait:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> Verifier</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">    ...</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> Prover</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">,</span><span style="color: #FABD2F;"> P</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">    ...</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>The rest of the changes are purely mechanical and can be found in
+<a rel="external" href="https://github.com/montekki/thaler-study/commit/d32e6fc445409e89ce34675d26af0b0f3b8ea369">this commit</a>.</p>
+<h2 id="sum-check-protocol-to-count-triangles">Sum Check Protocol to Count Triangles</h2>
+<p>For the triangle counting problem we are going to be dealing with the
+polynomial already mentioned above:</p>
+<p>$$
+g(X, Y, Z) = \widetilde{f_A}(X, Y) \cdot \widetilde{f_A}(Y, Z) \cdot \widetilde{f_A}(X, Z)
+$$</p>
+<p>What is this polynomial? Well, suppose we are given a graph G,
+E - a set of edges in G and $A$ is the adjacency matrix of
+the graph $G$, i.e. $A_{i,j} = 1 \Leftrightarrow (i, j) \in F$.
+The matrix $A$ is used to count the number of triangles in this graph.</p>
+<p>To do that matrix $A$ is viewed not as a matrix but rather as a
+function $f_A$ mapping
+$\lbrace 0, 1 \rbrace^{\log n} \times \lbrace 0, 1 \rbrace^{\log n} \rightarrow \lbrace 0, 1 \rbrace$ where indices $i,j$ are viewed
+as arrays of bits of $\log n$. Then the formula for counting the number
+of triangles would look like this:</p>
+<p>$$
+\Delta = \frac{1}{6} \sum_{ x,y,x \in \lbrace 0, 1 \rbrace ^{\log n}}
+f_A(x,y) \cdot f_A(y,z) \cdot f_A(x,z)
+$$</p>
+<p>To define the polynomial that can
+be used in the Sum Check protocol the multilinear extension
+$\widetilde{f_A}$ of $f_A$ is used and so we arrive at the above
+polynomial $g(X, Y, Z)$.</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="plain"><span class="giallo-l"><span>For more detailed description of going from the $A$ to the polynomial</span></span>
+<span class="giallo-l"><span>you should check out The Book, we are now going to get to implementing</span></span>
+<span class="giallo-l"><span>this in Rust.</span></span></code></pre>
+<p>Since we are going to deal with the polynomial that is the multiplication
+of three evaluations of the same multilinear extension function over a
+different set of variables we can define our polynomial as follows:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">pub</span><span style="color: #FE8019;"> struct</span><span style="color: #FABD2F;"> G</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">    f_a</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> DenseMultilinearExtension</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>Here we use a <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/struct.DenseMultilinearExtension.html"><code>DenseMultilinearExtension</code></a>
+from the <code>ark_poly</code> crate to implement the $\widetilde{f_A}$.</p>
+<p>First lets implement the constructor that would allow
+to go from the adjacency matrix $A$ to our multilinear extension.</p>
+<p>Being generic over any iterable structure of <code>bool</code> values:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> G</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    pub fn</span><span style="color: #FABD2F;"> new_adj_matrix</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">M</span><span style="color: #A89984;">&gt;(</span><span style="color: #83A598;">num_vars</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> matrix</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> M</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #83A598;"> Self</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    where</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        M</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> IntoIterator</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Item</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> bool</span><span style="color: #A89984;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> g</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> DenseMultilinearExtension</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">from_evaluations_vec</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            num_vars</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            matrix</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">into_iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">b</span><span style="color: #FB4934;">| if</span><span style="color: #83A598;"> b</span><span style="color: #A89984;"> {</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">() }</span><span style="color: #FB4934;"> else</span><span style="color: #A89984;"> {</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">() })</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">                .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">(),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        );</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">        Self</span><span style="color: #A89984;"> {</span><span style="color: #83A598;"> f_a</span><span style="color: #8EC07C;">:</span><span style="color: #83A598;"> g</span><span style="color: #A89984;"> }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<hr />
+<p><strong>NOTE</strong>
+<code>arkworks</code> uses assertions within implementations of methods,
+the <code>from_evaluations_vec</code> constructor will panic if the dimensions
+of input parameters do not match.</p>
+<hr />
+<p>Next, to use this polynomial with the new generic version of the Sum Check
+protocol defined above the <code>SumCheckPolynomial</code> trait for it.
+As I am going to implement it as close to The Book as possible it is going
+to get quite ugly.</p>
+<p>First, the <code>evaluate</code> method. Recall, that the polynomial has the input
+of the form $(x_1,\dots,x_n,y_1,\dots,y_n,z_1,\dots,z_n)$ and our
+multilinear extension <code>f_a</code> has to be evaluated three times over
+respective parts of this input:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> FftField</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> SumCheckPolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;</span><span style="color: #FB4934;"> for</span><span style="color: #FABD2F;"> G</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> point</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        assert!</span><span style="color: #A89984;">(</span><span style="color: #83A598;">point</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> ==</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> *</span><span style="color: #D3869B;"> 3</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> x_z</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> point</span><span style="color: #A89984;">[</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_owned</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        x_z</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">extend_from_slice</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">..</span><span style="color: #A89984;">]);</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        // X, Y</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Some</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()])</span><span style="color: #8EC07C;">? *</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">            // Y, Z</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #8EC07C;"> ..</span><span style="color: #A89984;"> ])</span><span style="color: #8EC07C;">?</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            *</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">x_z</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">?</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        )</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>Here the cases of $(x, y)$ and $(y,z)$ are trivial since they can
+be simply taken as subslices of the input, however the $(x, z)$ case
+involves constructing the new vector since we are limited by how the
+contiguous memory works and I haven't found a better in-place solution yet.
+If <code>DenseMultilinearExtension::evaluate</code> API would be able to take
+something iterable instead of a slice, one could just chain to
+iterators of subslices.</p>
+<p>Next, one trivial method to compute the number of variables
+based on the number of variables of the underlying <code>DenseMultilinearExtension</code>:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> num_vars</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        (</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> *</span><span style="color: #D3869B;"> 3</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>The <code>to_evaluations</code> method is going to be a bit more tricky. What we have at
+hand is the <code>f_a</code> multilinear extension. The trait <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/evaluations/multivariate/multilinear/trait.MultilinearExtension.html"><code>MultilinearExtension</code></a> provides us with a <code>to_evaluations</code> method that "returns a list of evaluations
+over the domain, which is the boolean hypercube". But the domain of $f_A$ is $(X, Y)$ and
+in our case the domain of $g$ is $(X, Y, Z)$. It is clear that at each point in its
+domain $g$ is a multiplication of exactly three values from the vector of evaluations
+of $f_A$ over $f_A$'s domain, in other words these said three values are just values
+from <code>f_a.to_evaluations()</code> vector. But how do we compute the needed values to correctly
+index into this vector? Some good old bitmasking and bit shifting of course:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> to_evaluations</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> x_size</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> bit_mask_most_significant</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> ((</span><span style="color: #FABD2F;">usize</span><span style="color: #8EC07C;">::</span><span style="color: #D3869B;font-weight: bold;">MAX</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #83A598;"> x_size</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> ^</span><span style="color: #FABD2F;"> usize</span><span style="color: #8EC07C;">::</span><span style="color: #D3869B;font-weight: bold;">MAX</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #83A598;"> x_size</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> vec!</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">();</span><span style="color: #D3869B;"> 2</span><span style="color: #FABD2F;">usize</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">pow</span><span style="color: #A89984;">(</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> u32</span><span style="color: #A89984;">)];</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> evaluations</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_evaluations</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        for</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">x_y</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> evaluation</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> in</span><span style="color: #83A598;"> evaluations</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">enumerate</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">            for</span><span style="color: #83A598;"> z</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 0</span><span style="color: #8EC07C;">..</span><span style="color: #D3869B;">2</span><span style="color: #FABD2F;">usize</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">pow</span><span style="color: #A89984;">(</span><span style="color: #83A598;">x_size</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> u32</span><span style="color: #A89984;">) {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> f_x_y</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> evaluation</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> f_y_z_idx</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> ((</span><span style="color: #83A598;">x_y</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #83A598;"> x_size</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;"> bit_mask_most_significant</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> |</span><span style="color: #83A598;"> z</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> f_y_z</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> evaluations</span><span style="color: #A89984;">[</span><span style="color: #83A598;">f_y_z_idx</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> f_x_z_idx</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">x_y</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;"> bit_mask_most_significant</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> |</span><span style="color: #83A598;"> z</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> f_x_z</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> evaluations</span><span style="color: #A89984;">[</span><span style="color: #83A598;">f_x_z_idx</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> f_x_y_z</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> (</span><span style="color: #8EC07C;">*</span><span style="color: #83A598;">f_x_y</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> f_y_z</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> f_x_z</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">                res</span><span style="color: #A89984;">[(</span><span style="color: #83A598;">x_y</span><span style="color: #FB4934;"> &lt;&lt;</span><span style="color: #83A598;"> x_size</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> |</span><span style="color: #83A598;"> z</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> f_x_y_z</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">        res</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span></code></pre>
+<p>And now the last one: going to a univariate polynomial by fixing
+all variables but one.</p>
+<p>Let's think about it:</p>
+<p>Suppose we are given a point $(x_1,\dots,x_n,y_1,\dots,y_n,z_1,\dots,z_n)$
+and the index $i$ of the variable that has to remain un-fixed so to speak.</p>
+<p>Index $i$ lands into either $X$, $Y$ or $Z$:</p>
+<ul>
+<li>
+<p>$(x_1,\dots,x_{i-1},x_i,x_{i+1},\dots,x_n,y_1,\dots,y_n,z_1,\dots,z_n)$</p>
+</li>
+<li>
+<p>$(x_1,\dots,x_n,y_1,\dots,y_{i-1-n},y_{i-n},y_{i+1-n},\dots,y_n,z_1,\dots,z_n)$</p>
+</li>
+<li>
+<p>$(x_1,\dots,x_n,y_1,\dots,y_n,z_1,\dots,z_{i-1-2n},z_{i-2n},z_{i+1-2n},\dots, z_n)$</p>
+</li>
+</ul>
+<p>And as such it would affect two out of three factors $\widetilde{f_A}$
+in our polynomial. The third factor can be just evaluated at a constant
+point since it is not affected by this change.</p>
+<h2 id="going-to-a-univariate-polynomial">Going to a univariate polynomial</h2>
+<p>The rust code that handles the case when $i$ lands in $X$:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> to_univariate_at_point</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> at</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> point</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">SparsePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt;&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> x_y</span><span style="color: #8EC07C;"> = &amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()];</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> y_z</span><span style="color: #8EC07C;"> = &amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #8EC07C;">..</span><span style="color: #A89984;">];</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> x_z</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> point</span><span style="color: #A89984;">[</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">]</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">to_owned</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        x_z</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">extend_from_slice</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">..</span><span style="color: #A89984;">]);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        match</span><span style="color: #83A598;"> at</span><span style="color: #8EC07C;"> /</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> /</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">) {</span></span>
+<span class="giallo-l"><span style="color: #D3869B;">            0</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> f_y_z</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #83A598;">y_z</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> a</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">g_to_univariate_at</span><span style="color: #A89984;">(</span><span style="color: #83A598;">at</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> x_y</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">                let</span><span style="color: #83A598;"> b</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">g_to_univariate_at</span><span style="color: #A89984;">(</span><span style="color: #83A598;">at</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">x_z</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                Some</span><span style="color: #A89984;">((</span><span style="color: #8EC07C;">&amp;</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">a</span><span style="color: #8EC07C;"> * &amp;</span><span style="color: #83A598;">b</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> f_y_z</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into</span><span style="color: #A89984;">())</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span></span>
+<span class="giallo-l"><span style="color: #928374;font-style: italic;">        /* Cases for 1 and 2 are similar */</span></span></code></pre>
+<p>Again, we have to go use the same trick we used above to
+use a new vector to construct a value for $(X, Z)$. Another thing
+is that the helper <code>g_to_univariate_at</code> helper is used here
+that allows to fix all but one variables in <code>f_a</code> and turn it into
+a univariate polynomial.</p>
+<p>How could this helper be implemented?
+Let's look at all the building blocks that can go into this implementation:</p>
+<p><a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/struct.DenseMultilinearExtension.html"><code>DenseMultilinearExtension</code></a> implements the <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/evaluations/multivariate/multilinear/trait.MultilinearExtension.html"><code>MultilinearExtension</code></a>
+trait that among other things allows to fix a number of variables:</p>
+<blockquote>
+<p>Reduce the number of variables of self by fixing
+the <code>partial_point.len()</code> variables at <code>partial_point</code>.</p>
+</blockquote>
+<p>So we can go to the fewer variable polynomial by fixing the <em>first</em> $i$
+variables.</p>
+<p>It also implements a method that allows us to swapping variables
+(see the <code>replace</code> method).</p>
+<p>How can we use these two? In a very unelegant way:</p>
+<p>Suppose we have a point where we want to go to univariate poly at $i$:</p>
+<p>$$
+(x_1,\dots,x_{i-1},x_i,x_{i+1},\dots,x_n,y_1,\dots,y_n)
+$$</p>
+<ol>
+<li>
+<p>Use <code>fix_variables</code> at point $(x_1,\dots,x_{i-1})$, now we have:
+$$
+(x_i,x_{i+1},\dots,x_n,y_1,\dots,y_n)
+$$</p>
+</li>
+<li>
+<p>Use <code>replace</code> method to swap $x_i$ and $y_n$, to arrive at:
+$$
+(y_n,x_{i+1},\dots,x_n,y_1,\dots,y_{n-1},x_i)
+$$</p>
+</li>
+<li>
+<p>Again, use <code>fix_variables</code> at point $(y_n)$:
+$$
+(x_{i+1},\dots,x_n,y_1,\dots,y_{n-1},x_i)
+$$</p>
+</li>
+<li>
+<p>And finally use <code>fix_variables</code> again, this time at point $(x_{i+1},\dots,y_{n-1})$:
+$$
+(x_i)
+$$</p>
+</li>
+</ol>
+<p>The last two steps could be squashed into a single one if we could
+swap to points in a vector, but we are using a slice instead of a vector.</p>
+<p>At the end of these series of steps we will end up with a
+univariate <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/struct.DenseMultilinearExtension.html"><code>DenseMultilinearExtension</code></a> over variable $i$.</p>
+<p>Now the only thing separating us from the finalizing implementation
+of the needed trait is turning this univariate extension into a
+univariate <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/polynomial/univariate/struct.SparsePolynomial.html"><code>univariate::SparsePolynomial</code></a>, since, you know, we are using Rust
+to typesafely guarantee that the polynomial is actually univariate.</p>
+<p>What we know is that $g$ is a polynomial with degree at most $2$ in
+each variable so this univariate extension is an extension polynomial
+of degree of at most $2$. Quadratic polynomials can be described with
+at most $3$ coefficients. So we actually can interpolate our quadratic
+<code>SparsePolynomial</code> from evaluations of the extension. Luckily, <code>ark-poly</code>
+gives us exactly the machinery to do this with the types
+<a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/domain/general/enum.GeneralEvaluationDomain.html"><code>GeneralEvaluationDomain</code></a> and <a rel="external" href="https://docs.rs/ark-poly/0.3.0/ark_poly/evaluations/univariate/struct.Evaluations.html"><code>Evaluations</code></a>
+that stores a univariate polynomial in the evaluations form.
+Then we just call the <code>interpolate</code> method on the latter to get
+to the needed polynomial.</p>
+<p>Here is the code for all the steps above that implements the said helper:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">impl</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> FftField</span><span style="color: #A89984;">&gt;</span><span style="color: #FABD2F;"> G</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    fn</span><span style="color: #FABD2F;"> g_to_univariate_at</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">self</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> at</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> usize</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> point</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> DensePolynomial</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> fixed_1</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">fix_variables</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">at</span><span style="color: #A89984;">]);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        if</span><span style="color: #83A598;"> at</span><span style="color: #8EC07C;"> !=</span><span style="color: #83A598;"> self</span><span style="color: #8EC07C;">.</span><span>f_a</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            fixed_1</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">relabel_inplace</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">0</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> fixed_1</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            fixed_1</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> fixed_1</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">fix_variables</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #A89984;">[</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #83A598;">point</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">]]);</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> fixed_2</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> fixed_1</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">fix_variables</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">point</span><span style="color: #A89984;">[</span><span style="color: #83A598;">at</span><span style="color: #8EC07C;"> +</span><span style="color: #D3869B;"> 1</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">point</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">]);</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            fixed_1</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> fixed_2</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> domain</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> GeneralEvaluationDomain</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">3</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> evaluations</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> domain</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">elements</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">e</span><span style="color: #FB4934;">|</span><span style="color: #83A598;"> fixed_1</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">evaluate</span><span style="color: #A89984;">(</span><span style="color: #8EC07C;">&amp;</span><span style="color: #A89984;">[</span><span style="color: #83A598;">e</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">())</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> evaluations</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Evaluations</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">from_vec_and_domain</span><span style="color: #A89984;">(</span><span style="color: #83A598;">evaluations</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> domain</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">        evaluations</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">interpolate</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h2 id="testing-the-code">Testing the code.</h2>
+<p>To test the code we need to use the $\mathbb{F}_p$ where $p$ is a prime
+such that $p \geq 6n^3$. We are going to write a simple test for the
+$4 \times 4$ matrix and the smallest $p$ satisfying this bound is $389$.</p>
+<p>So lets construct the field, the adjacency matrix and kick off
+the Sum Check protocol the same way we did in testing in the previous post:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #A89984;">#[</span><span>test</span><span style="color: #A89984;">]</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> test_simple_matrix</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    #[</span><span>derive</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">MontConfig</span><span style="color: #A89984;">)]</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    #[</span><span>modulus </span><span style="color: #8EC07C;">=</span><span style="color: #A89984;"> &quot;</span><span style="color: #B8BB26;">389</span><span style="color: #A89984;">&quot;]</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    #[</span><span>generator </span><span style="color: #8EC07C;">=</span><span style="color: #A89984;"> &quot;</span><span style="color: #B8BB26;">2</span><span style="color: #A89984;">&quot;]</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    struct</span><span style="color: #FABD2F;"> FrConfig</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">    type</span><span style="color: #FABD2F;"> Fp389</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Fp64</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">MontBackend</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">FrConfig</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> 1</span><span style="color: #A89984;">&gt;&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> rng</span><span style="color: #8EC07C;"> = &amp;</span><span style="color: #FE8019;">mut</span><span style="color: #FABD2F;"> test_rng</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> adj_matrix</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> vec!</span><span style="color: #A89984;">[</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        vec!</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">false</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> true</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> true</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        vec!</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">true</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> true</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        vec!</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">true</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> true</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        vec!</span><span style="color: #A89984;">[</span><span style="color: #D3869B;">false</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> false</span><span style="color: #A89984;">],</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    ];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> g</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> G</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">Fp389</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        G</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new_adj_matrix</span><span style="color: #A89984;">(</span><span style="color: #83A598;">adj_matrix</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">(),</span><span style="color: #83A598;"> adj_matrix</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">flatten</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #83A598;">b</span><span style="color: #FB4934;">|</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;">b</span><span style="color: #A89984;">));</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> num_vars</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> g</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">num_vars</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> prover</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Prover</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">clone</span><span style="color: #A89984;">());</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> c_1</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> prover</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">c_1</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> r_j</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Fp389</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> verifier</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Verifier</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">new</span><span style="color: #A89984;">(</span><span style="color: #83A598;">num_vars</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> c_1</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> g</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #83A598;"> j</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 0</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">num_vars</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> g_j</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> prover</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">round</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r_j</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> j</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> verifier_res</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> verifier</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">round</span><span style="color: #A89984;">(</span><span style="color: #83A598;">g_j</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> rng</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">        match</span><span style="color: #83A598;"> verifier_res</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            VerifierRoundResult</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">JthRound</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">                r_j</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> r</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">            VerifierRoundResult</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">FinalRound</span><span style="color: #A89984;">(</span><span style="color: #83A598;">res</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> =&gt;</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                assert!</span><span style="color: #A89984;">(</span><span style="color: #83A598;">res</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">                return</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    panic!</span><span style="color: #A89984;">(&quot;</span><span style="color: #B8BB26;">should have returned on FinalRound from verifier</span><span style="color: #A89984;">&quot;);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>and when we run it hopefully we will see that it succeeds:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="plain"><span class="giallo-l"><span>running 1 test</span></span>
+<span class="giallo-l"><span>test tests::test_simple_matrix ... ok</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s</span></span></code></pre><h2 id="final-notes">Final Notes</h2>
+<p>The code for the implementation as always may be found in the <a rel="external" href="https://github.com/montekki/thaler-study/tree/master/triangle-counting">repo</a>.
+The existing approach to Sum Check protocol is not quite efficient yet
+it has some obvious places to optimize as well as implement the optimizations
+The Book talks about. However recall that <em>Premature optimization is the root of all evil</em>
+and we were more focusing here on generalizing the protocol
+to lay the foundation for the upcoming GKR implementation. For any
+questions, suggestions or fixes just create an issue in the repo.
+Thanks and see you in the next post.</p>
+<hr />
+<h2 id="changelog">Changelog</h2>
+<p><code>26-08-2022</code></p>
+<ul>
+<li>Fixed <code>to_evaluations</code> function and added a randomized test. The changeset may
+be found at <a rel="external" href="https://github.com/montekki/thaler-study/commit/893317649e56ceee249ff9bc169e0e4b58f70a81"><code>8933176</code></a> in the repo.</li>
+<li>Fixed typos and things pointed out in review by <a rel="external" href="https://github.com/thor314">Thor</a>.</li>
+</ul>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2026-02-03T05:12:23.965097880+00:00">2022-2026</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>

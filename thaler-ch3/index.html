@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+<title>Evaluating multilinear extensions with Rust</title>
+
+
+
+<meta property="og:title" content="Evaluating multilinear extensions with Rust">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+
+
+<link rel="canonical" href="https://montekki.github.io/thaler-ch3/">
+<meta property="og:url" content="https://montekki.github.io/thaler-ch3/">
+
+
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+  
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2022-06-24T00:00:00+00:00">
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image"">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+
+
+
+  <meta property="twitter:title" content="Evaluating multilinear extensions with Rust">
+
+
+
+  <meta name="twitter:site" content="@m0nt3kk1">
+  
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "author": {
+    "@type":"Person",
+	  "name":"Fedor Sakharov"
+  },
+  "description": "",
+  "url": "https://montekki.github.io/thaler-ch3/",
+  "@context":"https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Evaluating multilinear extensions with Rust"
+  
+    
+    
+      "datePublished":"2022-06-24T00:00:00+00:00",
+    
+    ,
+    "mainEntityOfPage":{
+      "@type":"WebPage",
+      "@id":"https://montekki.github.io/thaler-ch3/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+                                                                                                                                                                                                            <script>
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title"></h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2022-06-24">June 24, 2022</time>
+  	</div>
+  	<h1 class="post-title">Evaluating multilinear extensions with Rust</h1>
+  	<div class="post-line"></div>
+  	<p>Hi there! This is a first post in a series where I am planning to take notes
+on <a rel="external" href="https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.html">Proofs, Arguments and Zero-Knowledge</a>
+as I am reading it. I write code in Rust for a living so
+I am going to use this language to implement algorithms and protocols from the book.</p>
+<span id="continue-reading"></span><h1 id="multilinear-extensions">Multilinear Extensions</h1>
+<h2 id="preliminaries">Preliminaries</h2>
+<p><em>Chapter 3</em> of the book introduces polynomial extensions for multivariate functions:</p>
+<p>Let $\mathbb{F}$ be any finite field, and let $f : \lbrace 0, 1 \rbrace ^n \rightarrow \mathbb{F}$
+be any function mapping the $\nu$-dimensional Boolean hypercube to $\mathbb{F}$.
+A $v$-variate polynomial $g$ over $\mathbb{F}$ is said to be an <em>extension</em> of $f$ if
+$g$ agrees with $f$ at all Boolean-valued inputs, i.e.
+$g(x) = f(x) \space \forall x \in \lbrace 0, 1 \rbrace ^\nu$</p>
+<p>Then the <em>multilinear</em> polynomials are defined:</p>
+<p><strong>Definition 3.4</strong>. A multivariate polynomial $g$ is multilinear if the degree of the
+polynomial at each variable is at most one.</p>
+<p>A following fact is introduced:</p>
+<p><strong>Fact 3.5</strong>. Any function $f : \lbrace 0, 1 \rbrace ^\nu \rightarrow \mathbb{F}$
+<em>has a unique</em> multilinear <em>extension (MLE) over $\mathbb{F}$</em>, and we reserve the
+notation $\tilde{f}$ for this special extension of $f$.</p>
+<p>And a lemma:</p>
+<p><strong>Lemma 3.6</strong>. (Lagrange interpolation of multilinear polynomials).
+Let $f : \lbrace 0, 1 \rbrace ^\nu \rightarrow \mathbb{F}$ be any function.
+Then the following multilinear polynomial $\tilde{f}$ extends $f$:</p>
+<p>$$
+\begin{equation}
+\tilde{f}(x_1,\dots,x_\nu) = \sum_{w \in \lbrace 0, 1 \rbrace ^\nu} f(w) \cdot \chi_w(x_1,\dots,x_\nu)
+\tag{3.1}
+\end{equation}
+$$</p>
+<p>where, for any $w = (w_1,\dots,w_\nu)$:</p>
+<p>$$
+\begin{equation}
+\chi_w(x_1,\dots,x_\nu) := \prod_{i=1}^{\nu}(x_i w_i + (1 - x_i)(1 - w_i)).
+\tag{3.2}
+\end{equation}
+$$</p>
+<p>which gives a way to evaluate $\tilde{f}$.</p>
+<h2 id="algorithms-for-evaluating-the-multilinear-extension-of-f">Algorithms for evaluating the multilinear extension of $f$</h2>
+<p>There are two ways to efficiently compute $\tilde{f}$ at any point $r \in \mathbb{F}^\nu$
+if the values $f(w)$ are given for all $n = 2^\nu$ Boolean vectors
+$w \in \lbrace 0, 1 \rbrace ^\nu$:</p>
+<p><strong>Lemma 3.7</strong>. Gives a way to compute the right side of equation (3.1) incrementally
+from stream by initializing $\tilde{f}(r) \leftarrow 0$, and processing each
+update $(w, f(w))$ via:</p>
+<p>$$
+\tilde{f}(r) \leftarrow \tilde{f}(r) + f(w) \cdot \chi_w(r).
+$$</p>
+<p>in $\mathcal{O}(n \log{} n)$ time and $\mathcal{O}(\log{} n)$ space.</p>
+<p><strong>Lemma 3.8</strong> gives a staged way of computing $\tilde{f}(r)$ in $n$ stages where Stage $j$
+constructs a memorization table $A^{(j)}$ of size $2^j$.</p>
+<h2 id="example">Example</h2>
+<p>Let's take a look at the example from the book: a function $f$ mapping $\lbrace 0, 1 \rbrace ^\nu$
+to $\mathbb{F}_5$.</p>
+<p>All evaluations of a function $f$ mapping $ \lbrace 0, 1 \rbrace ^2$ to the field $\mathbb{F}_5$:</p>
+<p>$$
+\begin{array}{c|c|c|}
+&amp; 0 &amp; 1 \\ \hline
+0 &amp; 1 &amp; 2 \\ \hline
+1 &amp; 1 &amp; 4 \\ \hline
+\end{array}
+$$</p>
+<p>All evaluations of the multilinear extension, $\tilde{f}$ of $f$ over $\mathbb{F}_5$:</p>
+<p>$$
+\begin{array}{c|c|c|c|c|c|}
+&amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 \\ \hline
+0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 0 \\ \hline
+1 &amp; 1 &amp; 4 &amp; 2 &amp; 0 &amp; 3 \\ \hline
+2 &amp; 1 &amp; 1 &amp; 1 &amp; 1 &amp; 1 \\ \hline
+3 &amp; 1 &amp; 3 &amp; 0 &amp; 2 &amp; 4 \\ \hline
+4 &amp; 1 &amp; 0 &amp; 4 &amp; 3 &amp; 2 \\ \hline
+\end{array}
+$$</p>
+<p>Via Lagrange Interpolation $\tilde{f}(x_1, x_2) = (1 - x_1)(1 - x_2) + 2(1 - x_1)x_2 + x_1(1 - x_2) + 4x_1x_2$</p>
+<p>To understand the evaluation Algorithms better lets do some by-hand evaluations of $\tilde{f}$.</p>
+<h3 id="evaluating-tilde-f-r-with-lemma-3-7">Evaluating $\tilde{f}(r)$ with Lemma 3.7</h3>
+<p>Let $r = \lbrace 3, 1 \rbrace $. Initialize $\tilde{f}(r) \leftarrow 0$.</p>
+<p><strong>Step 1.</strong></p>
+<p>$w = \lbrace 0, 0 \rbrace$.</p>
+<p>$$
+\chi_w(r) = (r_1 w_1 + (1 - r_1)(1 - w_1))(r_2 w_2 + (1 - r_2)(1 - w_2)) = \newline
+(3 \cdot 0 + (1 - 3)(1 - 0))(1 \cdot 0 + (1 - 1)(1 - 0)) = 0.
+$$</p>
+<p>Update
+$$
+\tilde{f}(r) \leftarrow \underbrace{\tilde{f}(r)}_{0} +\underbrace{f(w)}_{1} \cdot 0
+$$</p>
+<p><strong>Step 2.</strong></p>
+<p>$w = \lbrace 0, 1 \rbrace $.</p>
+<p>$$
+\chi_w(r) = (3 \cdot 0 + (1 - 3)(1 - 0))(1 \cdot 1 + (1 - 1)(1 - 1)) = -2 \cdot 1 = 3.
+$$</p>
+<p>Update</p>
+<p>$$
+\tilde{f}(r) \leftarrow \underbrace{\tilde{f}(r)}_{0} + \underbrace{f(w)}_{2} \cdot 3 = 1.
+$$</p>
+<p><strong>Step 3.</strong></p>
+<p>$w = \lbrace 1, 0 \rbrace $</p>
+<p>$$
+\chi_w(r) = (3 \cdot 1 + (1 - 3)(1 - 1))(1 \cdot 0 + (1 - 1)(1 - 0)) = 0.
+$$</p>
+<p>So no update needed on this step.</p>
+<p><strong>Step 4.</strong></p>
+<p>$w = \lbrace 1, 1 \rbrace $</p>
+<p>$$
+\chi_w(r) = (3 \cdot 1 + (1 - 3)(1 - 1))(1 \cdot 1 + (1 - 1)(1 - 1)) = 3.
+$$</p>
+<p>Update</p>
+<p>$$
+\tilde{f}(r) \leftarrow \underbrace{\tilde{f}(r)}_{1} + \underbrace{f(w)}_{4} \cdot 3 = 1 + 2 = 3.
+$$</p>
+<h3 id="evaluating-tilde-f-r-with-lemma-3-8">Evaluating $\tilde{f}(r)$ with Lemma 3.8</h3>
+<p><strong>Step 1.</strong></p>
+<p>$r = \lbrace 3, 1 \rbrace$</p>
+<p>At this step a table $A^{(1)}$ of size $2$ is constructed:</p>
+<p>$A^{(1)}[(w_1)] = (w_1 r_1 + (1 - w_1)(1 - r_1))$</p>
+<p>$A^{(1)}[(0)] = (1 - r_1) = (1 - 3) = 3$</p>
+<p>$A^{(1)}[(1)] = r_1 = 3$</p>
+<p><strong>Step 2.</strong></p>
+<p>At this step a table $A^{(2)}$ of size $4$ is constructed:</p>
+<p>$A^{(2)}[(w_1, w_2)] = A^{(1)}[w_1] \cdot (w_2 r_2 + (1 - w_2)(1 - r_2))$</p>
+<p>$A^{(2)}[(0, 0)] = 3 \cdot (0 \cdot 1 + (1 - 0)(1 - 1)) = 0$</p>
+<p>$A^{(2)}[(0, 1)] = 3 \cdot (1 \cdot 1 + (1 - 1)(1 - 1)) = 3$</p>
+<p>$A^{(2)}[(1, 0)] = 3 \cdot (0 \cdot 1 + (1 - 0)(1 - 1)) = 0$</p>
+<p>$A^{(2)}[(1, 1)] = 3 \cdot (1 \cdot 1 + (1 - 1)(1 - 1)) = 3$</p>
+<p>$\tilde{f}({3, 1}) = 0 \cdot 1 + 3 \cdot 2 + 0 \cdot 1 + 3 \cdot 4 = 6 + 12 = 1 + 2 = 3$</p>
+<h1 id="implementing-multilinear-extension-evaluations-in-rust">Implementing multilinear extension evaluations in Rust</h1>
+<p>To implement these algorithms in Rust the <a rel="external" href="http://arkworks.rs">arkworks-rs</a> framework
+is going to be used. Specifically we are going to need the <em>finite field</em> and
+<em>polynomial</em> crates (for the reasons of the newer API at the time of writing this post
+the git dependencies are used):</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="toml"><span class="giallo-l"><span style="color: #A89984;">[</span><span style="color: #FABD2F;">dependencies</span><span style="color: #A89984;">]</span></span>
+<span class="giallo-l"><span style="color: #83A598;">ark-ff</span><span style="color: #A89984;"> = {</span><span style="color: #83A598;"> git</span><span style="color: #A89984;"> = &quot;</span><span style="color: #B8BB26;">https://github.com/arkworks-rs/algebra</span><span style="color: #A89984;">&quot; }</span></span>
+<span class="giallo-l"><span style="color: #83A598;">ark-poly</span><span style="color: #A89984;"> = {</span><span style="color: #83A598;"> git</span><span style="color: #A89984;"> = &quot;</span><span style="color: #B8BB26;">https://github.com/arkworks-rs/algebra</span><span style="color: #A89984;">&quot; }</span></span></code></pre>
+<p>First lets take a look at the <a rel="external" href="https://docs.rs/ark-ff/0.3.0/ark_ff/fields/trait.Field.html"><code>Field</code></a> trait <code>ark-ff</code> provides. <code>Field</code> is a subtrait
+of a number of traits that make sense for any <code>Field</code> type such as <code>Add</code> and <code>Mul</code>
+as well as <code>Zero</code> and <code>One</code> traits that require the type to have the said $1$ and $0$ elements.
+It would make sense to make our implementations generic over a type that implements this
+<code>Field</code> trait.</p>
+<p>The first building blocks used in both algorithms is computation of base Lagrange polynomial
+$\chi_w(x_1,\dots,x_\nu)$. (3.1) gives us a straightforward way to implement this:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> lagrange_basis_poly_at</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;(</span><span style="color: #83A598;">x</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span><span style="color: #83A598;"> w</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> Option</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    if</span><span style="color: #83A598;"> x</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> !=</span><span style="color: #83A598;"> x</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        None</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span><span style="color: #FB4934;"> else</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> x</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">zip</span><span style="color: #A89984;">(</span><span style="color: #83A598;">w</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">fold</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">(),</span><span style="color: #FB4934;"> |</span><span style="color: #83A598;">acc</span><span style="color: #A89984;">, (</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">x_i</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">w_i</span><span style="color: #A89984;">)</span><span style="color: #FB4934;">|</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            acc</span><span style="color: #8EC07C;"> *</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">x_i</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> w_i</span><span style="color: #8EC07C;"> +</span><span style="color: #A89984;"> (</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #83A598;"> x_i</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;"> *</span><span style="color: #A89984;"> (</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #83A598;"> w_i</span><span style="color: #A89984;">))</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        });</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FABD2F;">        Some</span><span style="color: #A89984;">(</span><span style="color: #83A598;">res</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>This code calculates $\chi_w(x_1,\dots,x_\nu)$ in one streaming pass. There is also
+a sanity check that $x$ and $w$ are of the same length.</p>
+<p>Now let's move to implementing the evaluation algorithms themselves. Both of the
+algorithms have the same inputs: evaluations of $f(w)$ on all $2^n$ Boolean vectors $w$.
+and a fixed point $r$ at which the algorithm needs to compute $\tilde{f}(r)$.</p>
+<p>To save the space the evaluations $w$ can be passed to functions without the Boolean vectors
+themselves, instead the binary form of the index $j$ of $w_j$ value in the vector is used as one.
+For instance in the vector $\lbrace 1, 2, 3, 4 \rbrace $ value $3$ is at index $2$ that has a
+binary form $[1, 0]$ which would correspond to the vector $w = \lbrace 1, 0 \rbrace $.</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> cti_multilinear_from_evaluations</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;(</span><span style="color: #83A598;">evals</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span><span style="color: #83A598;"> r</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> res</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let</span><span style="color: #83A598;"> o</span><span style="color: #8EC07C;"> =</span><span style="color: #D3869B;"> 0</span><span style="color: #FABD2F;">u32</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #A89984;"> (</span><span style="color: #83A598;">i</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> eval</span><span style="color: #A89984;">)</span><span style="color: #FB4934;"> in</span><span style="color: #83A598;"> evals</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">enumerate</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> w</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Vec</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">with_capacity</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">());</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> len</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        for</span><span style="color: #83A598;"> j</span><span style="color: #FB4934;"> in</span><span style="color: #A89984;"> (</span><span style="color: #D3869B;">0</span><span style="color: #8EC07C;">..</span><span style="color: #83A598;">len</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">rev</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> bit</span><span style="color: #8EC07C;"> =</span><span style="color: #D3869B;"> 2_</span><span style="color: #FABD2F;">usize</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">pow</span><span style="color: #A89984;">(</span><span style="color: #83A598;">j</span><span style="color: #FB4934;"> as</span><span style="color: #FABD2F;"> u32</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">            let</span><span style="color: #83A598;"> w_j</span><span style="color: #8EC07C;"> =</span><span style="color: #FB4934;"> if</span><span style="color: #83A598;"> i</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;"> bit</span><span style="color: #8EC07C;"> ==</span><span style="color: #D3869B;"> 0</span><span style="color: #A89984;"> {</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">() }</span><span style="color: #FB4934;"> else</span><span style="color: #A89984;"> {</span><span style="color: #FABD2F;"> F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">() };</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            w</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">w_j</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">        res</span><span style="color: #8EC07C;"> += *</span><span style="color: #83A598;">eval</span><span style="color: #8EC07C;"> *</span><span style="color: #FABD2F;"> lagrange_basis_poly_at</span><span style="color: #A89984;">(</span><span style="color: #83A598;">r</span><span style="color: #A89984;">,</span><span style="color: #8EC07C;"> &amp;</span><span style="color: #83A598;">w</span><span style="color: #A89984;">)</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">();</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">    res</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">fn</span><span style="color: #FABD2F;"> vsbw_multilinear_from_evaluations</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Field</span><span style="color: #A89984;">&gt;(</span><span style="color: #83A598;">evals</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">],</span><span style="color: #83A598;"> r</span><span style="color: #8EC07C;">: &amp;</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #A89984;">])</span><span style="color: #8EC07C;"> -&gt;</span><span style="color: #FABD2F;"> F</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> eval_table</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> vec!</span><span style="color: #A89984;">[</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()];</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #83A598;"> r_j</span><span style="color: #FB4934;"> in</span><span style="color: #83A598;"> r</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let mut</span><span style="color: #83A598;"> eval_table_new</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Vec</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">with_capacity</span><span style="color: #A89984;">(</span><span style="color: #83A598;">eval_table</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">len</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> *</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FB4934;">        for</span><span style="color: #83A598;"> eval</span><span style="color: #FB4934;"> in</span><span style="color: #83A598;"> eval_table</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into_iter</span><span style="color: #A89984;">() {</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            eval_table_new</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">eval</span><span style="color: #8EC07C;"> *</span><span style="color: #A89984;"> (</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">one</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;"> -</span><span style="color: #83A598;"> r_j</span><span style="color: #A89984;">));</span></span>
+<span class="giallo-l"><span style="color: #83A598;">            eval_table_new</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">eval</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> r_j</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">        eval_table</span><span style="color: #8EC07C;"> =</span><span style="color: #83A598;"> eval_table_new</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #83A598;">    eval_table</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        .</span><span style="color: #FABD2F;">into_iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        .</span><span style="color: #FABD2F;">zip</span><span style="color: #A89984;">(</span><span style="color: #83A598;">evals</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">())</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">        .</span><span style="color: #FABD2F;">fold</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">F</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">zero</span><span style="color: #A89984;">(),</span><span style="color: #FB4934;"> |</span><span style="color: #83A598;">acc</span><span style="color: #A89984;">, (</span><span style="color: #83A598;">w_j</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> p_j</span><span style="color: #A89984;">)</span><span style="color: #FB4934;">|</span><span style="color: #83A598;"> acc</span><span style="color: #8EC07C;"> +</span><span style="color: #83A598;"> w_j</span><span style="color: #8EC07C;"> *</span><span style="color: #83A598;"> p_j</span><span style="color: #A89984;">)</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre><h1 id="testing-on-mathbb-f-5">Testing on $\mathbb{F}_5$</h1>
+<p>Not going too deep into the details of <code>ark-ff</code> interface the $F_5$ field may be defined as follows:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #A89984;">#[</span><span>derive</span><span style="color: #A89984;">(</span><span style="color: #FABD2F;">MontConfig</span><span style="color: #A89984;">)]</span></span>
+<span class="giallo-l"><span style="color: #A89984;">#[</span><span>modulus </span><span style="color: #8EC07C;">=</span><span style="color: #A89984;"> &quot;</span><span style="color: #B8BB26;">5</span><span style="color: #A89984;">&quot;]</span></span>
+<span class="giallo-l"><span style="color: #A89984;">#[</span><span>generator </span><span style="color: #8EC07C;">=</span><span style="color: #A89984;"> &quot;</span><span style="color: #B8BB26;">2</span><span style="color: #A89984;">&quot;]</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">struct</span><span style="color: #FABD2F;"> FrConfig</span><span style="color: #A89984;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FE8019;">type</span><span style="color: #FABD2F;"> Fr</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Fp64</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">MontBackend</span><span style="color: #A89984;">&lt;</span><span style="color: #FABD2F;">FrConfig</span><span style="color: #A89984;">,</span><span style="color: #83A598;"> 1</span><span style="color: #A89984;">&gt;&gt;;</span></span></code></pre>
+<p>Working with this type would require explicit conversion to and from <code>u32</code> types.
+The evaluations of $f$ from the above example:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FE8019;">let</span><span style="color: #83A598;"> evals</span><span style="color: #8EC07C;">:</span><span style="color: #FABD2F;"> Vec</span><span style="color: #A89984;">&lt;</span><span style="color: #83A598;">_</span><span style="color: #A89984;">&gt;</span><span style="color: #8EC07C;"> =</span><span style="color: #A89984;"> [</span><span style="color: #D3869B;">1</span><span style="color: #FABD2F;">u32</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> 2</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> 1</span><span style="color: #A89984;">,</span><span style="color: #D3869B;"> 4</span><span style="color: #A89984;">]</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">    .</span><span style="color: #FABD2F;">iter</span><span style="color: #A89984;">()</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">    .</span><span style="color: #FABD2F;">map</span><span style="color: #A89984;">(</span><span style="color: #FB4934;">|</span><span style="color: #8EC07C;">&amp;</span><span style="color: #83A598;">f</span><span style="color: #FB4934;">|</span><span style="color: #FABD2F;"> Fr</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">from_bigint</span><span style="color: #A89984;">(</span><span style="color: #83A598;">f</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">())</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">    .</span><span style="color: #FABD2F;">collect</span><span style="color: #A89984;">();</span></span></code></pre>
+<p>Finally, lets construct the matrix of evaluations of $\tilde{f}(r)$ on $\mathbb{F}_5^2$:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="rust"><span class="giallo-l"><span style="color: #FB4934;">for</span><span style="color: #83A598;"> i</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 0</span><span style="color: #FABD2F;">u32</span><span style="color: #8EC07C;">..</span><span style="color: #D3869B;">5</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">    let mut</span><span style="color: #83A598;"> line</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> Vec</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">with_capacity</span><span style="color: #A89984;">(</span><span style="color: #D3869B;">5</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #FB4934;">    for</span><span style="color: #83A598;"> j</span><span style="color: #FB4934;"> in</span><span style="color: #D3869B;"> 0</span><span style="color: #FABD2F;">u32</span><span style="color: #8EC07C;">..</span><span style="color: #D3869B;">5</span><span style="color: #A89984;"> {</span></span>
+<span class="giallo-l"><span style="color: #FE8019;">        let</span><span style="color: #83A598;"> f_r</span><span style="color: #8EC07C;"> =</span><span style="color: #FABD2F;"> cti_multilinear_from_evaluations</span><span style="color: #A89984;">(</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            &amp;</span><span style="color: #83A598;">evals</span><span style="color: #A89984;">,</span></span>
+<span class="giallo-l"><span style="color: #8EC07C;">            &amp;</span><span style="color: #A89984;">[</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                Fr</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">from_bigint</span><span style="color: #A89984;">(</span><span style="color: #83A598;">i</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">(),</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">                Fr</span><span style="color: #8EC07C;">::</span><span style="color: #FABD2F;">from_bigint</span><span style="color: #A89984;">(</span><span style="color: #83A598;">j</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into</span><span style="color: #A89984;">())</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">unwrap</span><span style="color: #A89984;">(),</span></span>
+<span class="giallo-l"><span style="color: #A89984;">            ],</span></span>
+<span class="giallo-l"><span style="color: #A89984;">        );</span></span>
+<span class="giallo-l"><span style="color: #83A598;">        line</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">push</span><span style="color: #A89984;">(</span><span style="color: #83A598;">f_r</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">into_bigint</span><span style="color: #A89984;">()</span><span style="color: #8EC07C;">.</span><span style="color: #FABD2F;">as_ref</span><span style="color: #A89984;">()[</span><span style="color: #D3869B;">0</span><span style="color: #A89984;">]);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">    }</span></span>
+<span class="giallo-l"><span style="color: #FABD2F;">    println!</span><span style="color: #A89984;">(&quot;{</span><span style="color: #B8BB26;">:?</span><span style="color: #A89984;">}&quot;,</span><span style="color: #83A598;"> line</span><span style="color: #A89984;">);</span></span>
+<span class="giallo-l"><span style="color: #A89984;">}</span></span></code></pre>
+<p>(The same piece of code is called for the second algorithm).</p>
+<p>When run this code will compute the following values:</p>
+<pre class="giallo" style="color: #EBDBB2; background-color: #32302F;"><code data-lang="plain"><span class="giallo-l"><span>[1, 2, 3, 4, 0]</span></span>
+<span class="giallo-l"><span>[1, 4, 2, 0, 3]</span></span>
+<span class="giallo-l"><span>[1, 1, 1, 1, 1]</span></span>
+<span class="giallo-l"><span>[1, 3, 0, 2, 4]</span></span>
+<span class="giallo-l"><span>[1, 0, 4, 3, 2]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>[1, 2, 3, 4, 0]</span></span>
+<span class="giallo-l"><span>[1, 4, 2, 0, 3]</span></span>
+<span class="giallo-l"><span>[1, 1, 1, 1, 1]</span></span>
+<span class="giallo-l"><span>[1, 3, 0, 2, 4]</span></span>
+<span class="giallo-l"><span>[1, 0, 4, 3, 2]</span></span></code></pre>
+<p>Which are the same as in the example above. Whole code for this post
+is available at <a rel="external" href="https://github.com/montekki/thaler-study/tree/master/multilinear-extensions">github repo</a>.</p>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2026-02-03T05:12:23.965097880+00:00">2022-2026</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>
