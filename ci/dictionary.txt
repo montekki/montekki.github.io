@@ -83,3 +83,5 @@ hasher
 alessandro
 handwavy
 satisfiability
+Thaler's
+walkthrough
