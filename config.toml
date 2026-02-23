@@ -42,10 +42,6 @@ image_height = 512
 image_width = 512
 og_locale = "en_US"
 
-[extra.seo.twitter]
-site = "m0nt3kk1"
-creator = "m0nt3kk1"
-
 [extra.footer]
 start_year = "2022"
 end_year = "2026"
