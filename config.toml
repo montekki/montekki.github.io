@@ -6,7 +6,8 @@ generate_feeds = true
 
 build_search_index = false
 
-title = ""
+title = "Fedor Sakharov's Blog"
+description = "Articles on zero-knowledge proofs, cryptography, and Rust programming"
 
 theme = "tale-zola"
 
@@ -37,8 +38,8 @@ url = "about"
 
 [extra.seo]
 image = "assets/favicon.jpg"
-image_height = 0 
-image_width = 0
+image_height = 512
+image_width = 512
 og_locale = "en_US"
 
 [extra.seo.twitter]
