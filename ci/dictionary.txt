@@ -85,3 +85,5 @@ handwavy
 satisfiability
 Thaler's
 walkthrough
+Fedor
+Sakharov
