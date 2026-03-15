@@ -3,6 +3,7 @@ base_url = "https://montekki.github.io"
 compile_sass = true
 
 generate_feeds = true
+generate_sitemap = true
 
 build_search_index = false
 
@@ -21,6 +22,7 @@ theme = "gruvbox-dark-soft"
 [extra]
 author = "Fedor Sakharov"
 github = "https://github.com/montekki"
+linkedin = "https://www.linkedin.com/in/fedor-sakharov/"
 email = "fedor.sakharov@gmail.com"
 katex = true
 

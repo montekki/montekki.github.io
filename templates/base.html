@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="index,follow,max-image-preview:large">
 
   {% block seo %}
     {%- set site_url = current_url | default(value=get_url(path="404.html")) -%}
@@ -15,12 +16,14 @@
   {% endblock seo %}
 
   <link rel="stylesheet" href="{{ get_url(path="main.css") | safe }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
 
   <link rel="icon" type="image/png" sizes="32x32" href="{{ get_url(path="assets/favicon-32x32.png") | safe }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ get_url(path="assets/favicon-16x16.png") | safe }}">
 
-  {% if config.generate_feed %}
+  {% if config.generate_feeds %}
     <link type="application/atom+xml" rel="alternate" href="{{ get_url(path=config.feed_filename | default(value="atom.xml")) | safe }}" title="{{ config.title | default(value="Tale-Zola") }}" />
   {% endif %}
 

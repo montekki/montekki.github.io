@@ -1,4 +1,6 @@
 +++
+title = "About"
+description = "About Fedor Sakharov, software developer writing about zero-knowledge proofs, cryptography, and Rust."
 template = "about/section.html"
 
 [extra]
