@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  
+
+  
+<title>PlonK Permutation Check | Fedor Sakharov&#x27;s Blog</title>
+
+
+
+<meta property="og:title" content="PlonK Permutation Check">
+
+
+
+<meta name="author" content="Fedor Sakharov">
+
+
+<meta property="og:locale" content="en_US">
+
+
+<meta name="description" content="A worked explanation of PlonK&#x27;s permutation check, why row constraints are insufficient, and how beta and gamma bind wire values to positions.">
+<meta property="og:description" content="A worked explanation of PlonK&#x27;s permutation check, why row constraints are insufficient, and how beta and gamma bind wire values to positions.">
+
+
+
+<link rel="canonical" href="https://montekki.github.io/plonk-1/">
+<meta property="og:url" content="https://montekki.github.io/plonk-1/">
+
+
+
+<meta property="og:site_name" content="Fedor Sakharov&#x27;s Blog" />
+
+
+
+  <meta property="og:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+    <meta property="og:image:alt" content="PlonK Permutation Check">
+  
+  <meta property="og:image:height" content="200">
+  <meta property="og:image:width" content="200">
+
+
+
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2026-06-23T00:00:00+00:00">
+  
+
+
+
+
+
+
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="twitter:image" content="https://montekki.github.io/assets/favicon.jpg">
+  
+    <meta name="twitter:image:alt" content="PlonK Permutation Check">
+  
+
+
+
+  <meta property="twitter:title" content="PlonK Permutation Check">
+
+
+  <meta name="twitter:url" content="https://montekki.github.io/plonk-1/">
+
+
+
+  <meta name="twitter:description" content="A worked explanation of PlonK&#x27;s permutation check, why row constraints are insufficient, and how beta and gamma bind wire values to positions.">
+
+
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "PlonK Permutation Check",
+  "name": "PlonK Permutation Check",
+  "description": "A worked explanation of PlonK's permutation check, why row constraints are insufficient, and how beta and gamma bind wire values to positions.",
+  "url": "https://montekki.github.io/plonk-1/",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Person",
+    "name": "Fedor Sakharov",
+    "url": "https://montekki.github.io",
+    "sameAs": [
+      "https://github.com/montekki",
+      "https://www.linkedin.com/in/fedor-sakharov/"
+    ]
+  }
+  
+    ,"image": "https://montekki.github.io/assets/favicon.jpg"
+  
+  
+    ,"publisher": {
+      "@type": "Organization",
+      "name": "Fedor Sakharov's Blog",
+      "url": "https://montekki.github.io"
+    }
+  
+  
+    
+      ,"datePublished": "2026-06-23T00:00:00+00:00"
+    
+    
+    ,"mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://montekki.github.io/plonk-1/"
+    }
+  
+}
+</script>
+
+  <link rel="stylesheet" href="https://montekki.github.io/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="https://montekki.github.io/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://montekki.github.io/assets/favicon-16x16.png">
+
+  
+    <link type="application/atom+xml" rel="alternate" href="https://montekki.github.io/atom.xml" title="Fedor Sakharov&#x27;s Blog" />
+  
+
+  
+
+  
+  
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" integrity="sha384-vlBdW0r3AcZO/HboRPznQNowvexd3fY8qHOWkBi5q7KGgqJ+F48+DceybYmrVbmB" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.js" integrity="sha384-AtrdNsnxl/75rvBneBVH7DtOvCxSVahR2zWqle1coBKd8DEmLoviqNeJSx64gNAs" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+    </script>
+
+
+</head>
+
+<body>
+  
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="https://montekki.github.io">
+        <h2 class="nav-title">Fedor Sakharov&#x27;s Blog</h2>
+      </a>
+      <ul>
+        
+          
+            <li><a href="https://montekki.github.io">Blog</a></li>
+          
+            <li><a href="https://montekki.github.io/tags">Tags</a></li>
+          
+            <li><a href="https://montekki.github.io/about">About</a></li>
+          
+        
+      </ul>
+    </div>
+  </nav>
+  
+
+  <main>
+    
+  <div class="post">
+  	<div class="post-info">
+  		<time datetime="2026-06-23">June 23, 2026</time>
+  	</div>
+  	<h1 class="post-title">PlonK Permutation Check</h1>
+  	<div class="post-line"></div>
+  	<p>Moin! This blog hasn't been updated for a while and it is a shame. A newer post
+is long overdue. Recently I have been diving into more SNARK and STARK protocols,
+One of the latest as the
+$\mathcal{P} \mathfrak{lon} \mathcal{K}$
+protocol. In a series of posts to come I would like
+to take some notes about it.</p>
+<span id="continue-reading"></span><h2 id="what-is-mathcal-p-mathfrak-lon-mathcal-k-about">What is $\mathcal{P} \mathfrak{lon} \mathcal{K}$ about?</h2>
+<h2 id="intro">Intro</h2>
+<p>$\mathcal{P} \mathfrak{lon} \mathcal{K}$ is, as <a rel="external" href="https://eprint.iacr.org/2019/953.pdf">the original paper</a> states it,
+a protocol for "universal full-succinct zk-SNARK". The name itself is an
+abbreviation for "Permutations over Lagrange-bases for Oecumenical
+Noninteractive arguments of Knowledge". That's a lot of words some or all of
+which I don't know so let's try to dive in what is actually going on in the
+paper and in the protocol.
+SNARK and STARK protocols allow us to generate (succinct) proofs of execution
+of some programs over given data. I will first very quickly describe what
+$\mathcal{P} \mathfrak{lon} \mathcal{K}$ does and what the "easy" checks are.
+I will assume that the reader is familiar with all the preliminaries that
+would be appropriate here, such as the KZG scheme, Pairing-friendly Elliptic
+Curves, Fields, and so on. My goal is then to go a bit deeper into the actual
+meat and bones of the <a rel="external" href="https://eprint.iacr.org/2019/953.pdf">original paper</a> which is believed to be the 5-th
+part of the paper "Polynomial protocols for identifying permutations". For a
+deeper dive into the material of the paper prior to the 5-th chapter I highly
+recommend <a rel="external" href="https://www.youtube.com/watch?v=A0oZVEXav24">Dan Boneh's lecture</a> from the <a rel="external" href="https://rdi.berkeley.edu/zk-learning/">ZKP MOOC</a>.</p>
+<h2 id="the-easy-part">The Easy Part</h2>
+<p>Let's quickly refresh the easier part of $\mathcal{P} \mathfrak{lon} \mathcal{K}$:
+how the computation is performed, how the trace is constructed and how the "easy"
+constraints are constructed.</p>
+<p>The system allows us to prove traces of executions of programs described
+in the form of circuits. The computations are done over some field $\mathbb{F}$.</p>
+<p>As an example of such a circuit consider the following one with two addition
+gates and one multiplication gate:</p>
+<p><img src="/generated/plonk-circuit.svg" alt="Arithmetic circuit for $y = (x_1 + x_2)(x_3 + x_4)$" /></p>
+<p>or, in the form of a polynomial:</p>
+<p>$$
+y = (x_1 + x_2)(x_3 + x_4)
+$$</p>
+<p>If the computation of this circuit is performed over the values of the field
+$\mathbb{F_13}$, namely $x_1 = 2, x_2 = 3, x_3 = 4, x_4 = 6$, then at each
+step of execution we will compute the following values:</p>
+<p>$$
+t_1 = x_1 + x_2 = 5, t_2 = x_3 + x_4 = 10
+\newline
+y = t_1 \cdot t_2 = 5 \cdot 10 = 50 \equiv 11 \pmod{13}
+$$</p>
+<p>Or, if we name the left and the right input of every node in the circuit
+respectively $a$ and $b$ and its output $c$, in table form:</p>
+<p>$$
+\begin{array}{|c|c|c|}
+\hline
+a &amp; b &amp; c \\ \hline
+2 &amp; 3 &amp; 2 + 3 = 5 \\ \hline
+4 &amp; 6 &amp; 4 + 6 = 10 \\ \hline
+5 &amp; 10 &amp; 5 \cdot 10 = 50 \equiv 11 \pmod{13} \\ \hline
+\end{array}
+$$</p>
+<p>And so to capture the both types of computations (addition and multiplication)
+and the equality of the results a constraint is introduced with the help of
+selectors $\mathcal{Q} = (\mathbf{q_L}, \mathbf{q_R}, \mathbf{q_O},\mathbf{q_M},
+\mathbf{q_C})$ that either enable or disable respectively multiplication or
+addition operation within the following equation:</p>
+<p>$$
+\mathbf{q_L} \cdot a_i + \mathbf{q_R} \cdot b_i + \mathbf{q_O} \cdot c_i + \mathbf{q_M} \cdot (a_i \cdot b_i) + \mathbf{q_C} = 0
+$$</p>
+<p>By switching the selector values we can turn the above equation
+into an addition or multiplication gate checks. If we add selector columns
+to the above trace table:</p>
+<p>$$
+\begin{array}{|c|c|c|c|c|c|c|c|}
+\hline
+a &amp; b &amp; c &amp; \mathbf{q_L} &amp; \mathbf{q_R} &amp; \mathbf{q_O} &amp; \mathbf{q_M} &amp; \mathbf{q_C} \\ \hline
+2 &amp; 3 &amp; 5 &amp; 1 &amp; 1 &amp; -1 &amp; 0 &amp; 0 \\ \hline
+4 &amp; 6 &amp; 10 &amp; 1 &amp; 1 &amp; -1 &amp; 0 &amp; 0 \\ \hline
+5 &amp; 10 &amp; 11 &amp; 0 &amp; 0 &amp; -1 &amp; 1 &amp; 0 \\ \hline
+\end{array}
+$$</p>
+<p>What we check in the "easy" part of the protocol is the equality of all
+of the above constraints to zero (ZeroCheck gadget) and also the "correctness"
+of assignment of inputs and outputs (meaning that they equal the claimed values).
+The way it is done in detail is best described in Dan Boneh's lecture that was
+mentioned earlier and in a lot of materials easily found online, such as
+<a rel="external" href="https://vitalik.eth.limo/general/2019/09/22/plonk.html">Understanding PLONK</a> by Vitalik Buterin.</p>
+<p>As it turns out the above checks are not enough to actually check the correctness
+of the program execution since just running a ZeroCheck on each row constraint
+does not tell us much other than the fact that we have "seen" some polynomials
+that are equal to zero on claimed points. As a matter of fact these checks
+allow a dishonest prover to provide a set of zero polynomials that by definition
+equal to $0$ everywhere and they would perfectly satisfy the constraints
+described above. The problem is that those check every single row without
+checking the relations between rows. They do not check that the output of first
+gate (5) becomes the first input to the third gate (5). Checking all relations
+between the rows of the trace is what the "hard" part of the protocol is about.</p>
+<h2 id="the-hard-part">The Hard Part</h2>
+<p>Now let's get to the harder part that the original paper calls "The heart
+of our universal SNARK", namely the "Polynomial Protocols for identifying
+permutations". I am going to cite the chapter step by step and try to unfold
+the logic behind each step and add a pen and paper example to it.</p>
+<blockquote>
+<p>$\exists \text{ a multiplicative subgroup } H \subset \mathbb{F}$, of order
+$n$ with generator $\mathbf{g}$.</p>
+</blockquote>
+<p>Note: my understanding of notation in the paper is that $[n]$ means a range
+of numbers starting with $0$ up to $n-1$.</p>
+<blockquote>
+<p>For $i \in [n]$, we denote by $L_i(X)$ the element of $\mathbb{F}_{&lt;n}[X]$
+with $L_i(g^i) = 1$ and $L_i(a) = 0 \quad \forall a \in H, a \neq \mathbf{g}^i$,
+i.e. $\{L_i\} _{i \in [n]}$ is a Lagrange basis for $H$.</p>
+</blockquote>
+<p>What the Lagrange Bases allow us to do is to select a specific row in the
+evaluation table of some polynomial.</p>
+<p>$$
+\begin{array}{|c|c|c|c|c|}
+\hline
+H &amp; f &amp; L_0 &amp; L_1 &amp; L_2 \\ \hline
+1 &amp; 2 &amp; 1 &amp; 0 &amp; 0 \\ \hline
+3 &amp; 5 &amp; 0 &amp; 1 &amp; 0 \\ \hline
+9 &amp; 7 &amp; 0 &amp; 0 &amp; 1 \\ \hline
+\end{array}
+$$</p>
+<p>Multiplying a polynomial by the $L_i$ allows us to constrain only the $i$-th
+row of the polynomial. $L_o(X) * f(X) = 0$ will only enforce $f(\omega^0) \equiv f(1) = 0$.</p>
+<p>The Lagrange Bases allow the following claim:</p>
+<blockquote>
+<p><em>Claim 5.1.</em> Fix $i \in [n]$, and $Z, Z^* \in \mathbb{F}[X]$. Then
+$L_i(a)(Z(a) - Z^*(a)) = 0$ for each $a \in H$ if and only if
+$Z(\mathbf{g}^i) = Z^*(\mathbf{g}^i) $.</p>
+</blockquote>
+<h3 id="the-permutation">The Permutation</h3>
+<p>Next, a permutation is defined:</p>
+<blockquote>
+<p>For $f, g \in \mathbb{F}_{&lt;d}[X]$ and a permutation $\sigma : [n] -&gt; [n]$,
+we write $g = \sigma(f)$ if $\forall i \in [n], g(\mathbf{g}^i) = f(\mathbf{g}^{\sigma(i)})$.</p>
+</blockquote>
+<p>What this says is that we have a rule by which we shuffle the powers of generator
+$\mathbf{g}$ of $H$ and that the evaluations of $f,g$ w.r.t. that shuffle should match.
+Let's have a look at example:</p>
+<p>Let the permutation $\sigma$ be defined as</p>
+<p>$$
+\sigma(0) = 1, \sigma(1) = 2, \sigma(2) = 0
+$$</p>
+<p>And so if we have a function $f$ defined by the following table (note the powers of $\omega$)</p>
+<p>$$
+\begin{array}{|c|c|}
+\hline
+H &amp; f \\ \hline
+1 = \omega^0 &amp; 2 \\ \hline
+3 = \omega^1 &amp; 5 \\ \hline
+9 = \omega^2 &amp; 7 \\ \hline
+\end{array}
+$$</p>
+<p>in this case the permutation performs a rotating shift, but in the general case
+obviously it can be any bijective permutation.</p>
+<p>$g$ has to have the same evaluations over the powers of $\omega$ shuffled
+according to the permutation $\sigma$:</p>
+<p>$$
+\begin{array}{|c|c|}
+\hline
+H &amp; g \\ \hline
+3 = \omega^1 &amp; 7 \\ \hline
+9 = \omega^2 &amp; 2 \\ \hline
+1 = \omega^0 &amp; 5 \\ \hline
+\end{array}
+$$</p>
+<p>And merging and sorting the three tables by $H$:</p>
+<p>$$
+\begin{array}{|c|c|c|}
+\hline
+H &amp; f &amp; g \\ \hline
+1 = \omega^0 &amp; 2 &amp; 5 \\ \hline
+3 = \omega^1 &amp; 5 &amp; 7 \\ \hline
+9 = \omega^2 &amp; 7 &amp; 2 \\ \hline
+\end{array}
+$$</p>
+<p>$g$ is the evaluations of $f$ shuffled accordingly to $\sigma$, or in this particular
+example just shifted one position right with rotation.</p>
+<h3 id="permutation-checking">Permutation Checking</h3>
+<p>What the protocol aims to do is to allow $\mathbf{P_{poly}}$ (the prover) to
+prove that $g = \sigma(f)$</p>
+<h4 id="identity-and-shuffle-polynomials">Identity and shuffle polynomials</h4>
+<p>Before introducing the protocol, two more polynomials called "preprocessed
+polynomials" are introduced:</p>
+<blockquote>
+<p>$\mathsf{S}_{\mathsf{ID}} \in \mathbb{F}_{&lt;n}[X]$ defined by $\mathsf{S_{ID}}(\mathbf{g}^i) = i; ~ \forall i \in [n]$</p>
+<p>$\mathsf{S}_{\sigma} \in \mathbb{F}_{&lt;n}[X]$ defined by $\mathsf{S}_{\sigma}(\mathbf{g}^i) = \sigma(i); ~ \forall i \in [n]$</p>
+</blockquote>
+<p>These are the identity and permutation polynomials</p>
+<p>$$
+\begin{array}{|c|c|c|c|c|}
+\hline
+H &amp; i &amp; \sigma(i) &amp; \mathsf{S}_{\mathsf{ID}} &amp; \mathsf{S}_{\sigma} \\ \hline
+1 = \omega^0 &amp; 0 &amp; 1 &amp; 0 &amp; 1 \\ \hline
+3 = \omega^1 &amp; 1 &amp; 2 &amp; 1 &amp; 2 \\ \hline
+9 = \omega^2 &amp; 2 &amp; 0 &amp; 2 &amp; 0 \\ \hline
+\end{array}
+$$</p>
+<h4 id="the-protocol">The Protocol</h4>
+<ol>
+<li>The Verifier $\mathbf{V_{poly}}$ samples random $\beta,\gamma \in \mathbb{F}$.</li>
+<li>Sample polys</li>
+</ol>
+<ul>
+<li>$f' := f + \beta \cdot \mathsf{S_{ID}} + \gamma$, (meaning $f'(\mathsf{g}^i) = f(\mathsf{g}^i) + \beta \cdot i + \gamma ~ \forall i \in [n]$)</li>
+<li>$g' := g + \beta \cdot \mathsf{S_{\sigma}} + \gamma$ (meaning $g'(\mathsf{g}^i) = g(\mathsf{g}^i) + \beta \cdot \sigma(i) + \gamma ~ \forall i \in [n]$)</li>
+</ul>
+<ol start="3">
+<li>
+<p>$\mathbf{P_{poly}}$ computes $Z \in \mathbb{F}_{&lt;n}[X]$, s.t. $Z(\mathbf{g}) = 1$
+and $\forall i \in \{2,..,n\}$</p>
+<p>$$
+Z(\mathbf{g}^i) = \prod_{1 \leq j &lt; i} f'(\mathbf{g}^j) / g'(\mathbf{g}^j)
+$$</p>
+</li>
+<li>
+<p>$\mathbf{P_{poly}}$ sends $Z$.</p>
+</li>
+<li>
+<p>$\mathbf{V_{poly}}$ checks that $\forall a \in H$:</p>
+<ul>
+<li>$L_1(a)(Z(a) - 1) = 0$</li>
+<li>$Z(a)f'(a) = g'(a)Z(a \cdot \mathbf{g})$.</li>
+</ul>
+</li>
+</ol>
+<p>Okay, but what does this all mean, what does it allow us to prove and why
+all of this works and is useful to us.</p>
+<h4 id="why-is-proving-g-sigma-f-useful">Why is proving $g = \sigma(f)$ useful?</h4>
+<p>Remember, our ultimate goal w.r.t. wiring checks in
+$\mathcal{P} \mathfrak{lon} \mathcal{K}$ is to check that the
+execution trace is "wired" correctly, namely that that the outputs
+and the inputs of gates have matching values when there exists
+a wire between them. This would bind a series of unrelated gate
+constraints (one for each row of the trace) with each other.</p>
+<p>Let's look again at the trace of $f$ mentioned earlier:</p>
+<p>$$
+\begin{array}{|c|c|c|}
+\hline
+a &amp; b &amp; c \\ \hline
+2 &amp; 3 &amp; 2 + 3 = 5 \\ \hline
+4 &amp; 6 &amp; 4 + 6 = 10 \\ \hline
+5 &amp; 10 &amp; 5 \cdot 10 = 50 \equiv 11 \pmod{13} \\ \hline
+\end{array}
+$$</p>
+<p>Here we want to check if $c_0 = a_2 \equiv 5$ and that $c_1 = b_2 \equiv 10$.</p>
+<p>Let's just for a moment look at the values from the above table as a one-dimensional
+array of elements of length $9$:</p>
+<p>$$
+\begin{array}{|c|c|c| c|c|c| c|c|c|}
+\hline
+2 &amp; 4 &amp; 5 &amp; 3 &amp; 6 &amp; 10 &amp; 5 &amp; 10 &amp; 11 \\ \hline
+\end{array}
+$$</p>
+<p>From this point on, I am no longer preserving the original circuit computation
+over $\mathbb{F_{13}}$. I only reuse the trace values as a toy vector over
+$\mathbb{F}_{19}$ so that we have a subgroup of size $9$.</p>
+<p>Remember, that in the definition of the permutation we first need a multiplicative
+subgroup $H \subset \mathbb{F}$ of order $n$ with generator $\omega$.
+In a field $\mathbb{F}_{19}$ there exists a multiplicative subgroup of size $9$
+with $\omega = 4$ (for reasons, you can check it yourself).</p>
+<p>Let's write out the values of this subgroup in both exponentiations of the
+generator and values form:</p>
+<p>$$
+\begin{array}{|c|c|c| c|c|c| c|c|c|}
+\hline
+4^0 &amp; 4^1 &amp; 4^2 &amp; 4^3 &amp; 4^4 &amp; 4^5 &amp; 4^6 &amp; 4^7 &amp; 4^8 \\ \hline
+1 &amp; 4 &amp; 16 &amp; 7 &amp; 9 &amp; 17 &amp; 11 &amp; 6 &amp; 5 \\ \hline
+\end{array}
+$$</p>
+<p>Now let's add these toy evaluations of $f$ to the same table, together with
+the corresponding $i$ values:</p>
+<p>$$
+\begin{array}{|c|c|c|c| c|c|c| c|c|c|}
+\hline
+i &amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 5 &amp; 6 &amp; 7 &amp; 8 \\ \hline
+\omega^i &amp; 4^0 &amp; 4^1 &amp; 4^2 &amp; 4^3 &amp; 4^4 &amp; 4^5 &amp; 4^6 &amp; 4^7 &amp; 4^8 \\ \hline
+\omega^i &amp; 1 &amp; 4 &amp; 16 &amp; 7 &amp; 9 &amp; 17 &amp; 11 &amp; 6 &amp; 5 \\ \hline
+f &amp; 2 &amp; 4 &amp; 5 &amp; 3 &amp; 6 &amp; 10 &amp; 5 &amp; 10 &amp; 11 \\ \hline
+\end{array}
+$$</p>
+<p>And so we view the values of $f$ as evaluations over $\langle \omega \rangle$.
+We want to prove that two $5$ values in their positions are equal to each other,
+same about $10$ values. So how can we use the permutation to check it is
+to create a permutation $\sigma$ that permutes the groups of values we want to check
+which would lead us to a new polynomial $g$ as defined above and if the check
+$g = \sigma(f)$ passes, this means that after permuting the values $5$ and $5$
+and $10$ and $10$ have remained unchanged and as such they are equal to each
+other.</p>
+<p>let's add $\sigma(i)$ and $g$ to the table and highlight the permutation:</p>
+<p>$$
+\begin{array}{|c|c|c|c| c|c|c| c|c|c|}
+\hline
+i &amp; 0 &amp; 1 &amp; \colorbox{red}{2} &amp; 3 &amp; 4 &amp; \colorbox{yellow}{5} &amp; \colorbox{red}{6} &amp; \colorbox{yellow}{7} &amp; 8 \\ \hline
+\omega^i &amp; 4^0 &amp; 4^1 &amp; 4^2 &amp; 4^3 &amp; 4^4 &amp; 4^5 &amp; 4^6 &amp; 4^7 &amp; 4^8 \\ \hline
+\omega^i &amp; 1 &amp; 4 &amp; 16 &amp; 7 &amp; 9 &amp; 17 &amp; 11 &amp; 6 &amp; 5 \\ \hline
+f &amp; 2 &amp; 4 &amp; \colorbox{red}{5} &amp; 3 &amp; 6 &amp; \colorbox{yellow}{10} &amp; \colorbox{red}{5} &amp; \colorbox{yellow}{10} &amp; 11 \\ \hline
+\sigma (i) &amp; 0 &amp; 1 &amp; \colorbox{red}{6} &amp; 3 &amp; 4 &amp; \colorbox{yellow}{7} &amp; \colorbox{red}{2} &amp; \colorbox{yellow}{5} &amp; 8 \\ \hline
+\end{array}
+$$</p>
+<p>Again, the idea is that for wiring checks we choose a permutation $\sigma$
+that shuffles the positions that must contain the same wire value. If the
+assignment is invariant under this permutation, then the values inside every
+cycle of $\sigma$ are equal, and the circuit trace is wired correctly.</p>
+<h4 id="which-permutations-sigma-can-we-choose">Which permutations $\sigma$ can we choose?</h4>
+<p>The algebraic fact we rely on here is that a vector invariant under a permutation
+is constant on each cycle of that permutation, but not necessarily between
+different cycles.</p>
+<p>Now, can we choose <em>any</em> permutation? That is not the case, let's have
+a look at a counterexample where we want to check that four values in a
+given vector equal each other.</p>
+<p>$$
+\begin{array}{|c|c|c|c| c|c|c| c|c|c|}
+\hline
+i &amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 5 &amp; 6 &amp; 7 &amp; 8 \\ \hline
+\omega^i &amp; 4^0 &amp; 4^1 &amp; 4^2 &amp; 4^3 &amp; 4^4 &amp; 4^5 &amp; 4^6 &amp; 4^7 &amp; 4^8 \\ \hline
+\omega^i &amp; 1 &amp; 4 &amp; 16 &amp; 7 &amp; 9 &amp; 17 &amp; 11 &amp; 6 &amp; 5 \\ \hline
+f &amp; 2 &amp; 4 &amp; 5 &amp; 3 &amp; 6 &amp; 5 &amp; 5 &amp; 5 &amp; 11 \\ \hline
+\end{array}
+$$</p>
+<p>(in terms of correct computations of the circuit the above no longer makes
+sense, we are just reasoning about some polynomial here)</p>
+<p>So we want to check if evaluations at positions $i \in \{2, 5, 6, 7\}$
+are the same. Let's try to permute it as $\{6, 7, 2, 5\}$.</p>
+<p>$$
+\begin{array}{|c|c|c|c| c|c|c| c|c|c|}
+\hline
+i &amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 5 &amp; 6 &amp; 7 &amp; 8 \\ \hline
+\omega^i &amp; 4^0 &amp; 4^1 &amp; 4^2 &amp; 4^3 &amp; 4^4 &amp; 4^5 &amp; 4^6 &amp; 4^7 &amp; 4^8 \\ \hline
+\omega^i &amp; 1 &amp; 4 &amp; 16 &amp; 7 &amp; 9 &amp; 17 &amp; 11 &amp; 6 &amp; 5 \\ \hline
+f &amp; 2 &amp; 4 &amp; 5 &amp; 3 &amp; 6 &amp; 5 &amp; 5 &amp; 5 &amp; 11 \\ \hline
+\sigma (i) &amp; 0 &amp; 1 &amp; \colorbox{red}{6} &amp; 3 &amp; 4 &amp; \colorbox{red}{7} &amp; \colorbox{red}{2} &amp; \colorbox{red}{5} &amp; 8 \\ \hline
+\end{array}
+$$</p>
+<p>good, now let's add a function $f'$ that has completely different values in the
+same cells and let's add functions $g,g'$ permuting the evaluations $f,f'$ accordingly.</p>
+<p>$$
+\begin{array}{|c|c|c|c| c|c|c| c|c|c|}
+\hline
+i &amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 5 &amp; 6 &amp; 7 &amp; 8 \\ \hline
+\omega^i &amp; 4^0 &amp; 4^1 &amp; 4^2 &amp; 4^3 &amp; 4^4 &amp; 4^5 &amp; 4^6 &amp; 4^7 &amp; 4^8 \\ \hline
+\omega^i &amp; 1 &amp; 4 &amp; 16 &amp; 7 &amp; 9 &amp; 17 &amp; 11 &amp; 6 &amp; 5 \\ \hline
+f &amp; 2 &amp; 4 &amp; 5 &amp; 3 &amp; 6 &amp; 5 &amp; 5 &amp; 5 &amp; 11 \\ \hline
+f' &amp; 2 &amp; 4 &amp; 1 &amp; 3 &amp; 6 &amp; 2 &amp; 3 &amp; 4 &amp; 11 \\ \hline
+\sigma (i) &amp; 0 &amp; 1 &amp; \colorbox{red}{6} &amp; 3 &amp; 4 &amp; \colorbox{green}{7} &amp; \colorbox{blue}{2} &amp; \colorbox{yellow}{5} &amp; 8 \\ \hline
+g &amp; 2 &amp; 4 &amp; \colorbox{blue}{5} &amp; 3 &amp; 6 &amp; \colorbox{yellow}{5} &amp; \colorbox{red}{5} &amp; \colorbox{green}{5} &amp; 11 \\ \hline
+g' &amp; 2 &amp; 4 &amp; \colorbox{blue}{3} &amp; 3 &amp; 6 &amp; \colorbox{yellow}{4} &amp; \colorbox{red}{1} &amp; \colorbox{green}{2} &amp; 11 \\ \hline
+\end{array}
+$$</p>
+<p>On these examples we see that $g = \sigma(f)$ and $g' = \sigma(f')$, even though
+$f'$ is not invariant under $\sigma$. But what
+if we tried to construct a malicious $m$ s.t. it would have non-matching
+values in positions $\{2,5,6,7\}$ and yet on permutation $m' = \sigma(m)$?</p>
+<p>$$
+\begin{array}{|c|c|c|c| c|c|c| c|c|c|}
+\hline
+i &amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 5 &amp; 6 &amp; 7 &amp; 8 \\ \hline
+\omega^i &amp; 4^0 &amp; 4^1 &amp; 4^2 &amp; 4^3 &amp; 4^4 &amp; 4^5 &amp; 4^6 &amp; 4^7 &amp; 4^8 \\ \hline
+\omega^i &amp; 1 &amp; 4 &amp; 16 &amp; 7 &amp; 9 &amp; 17 &amp; 11 &amp; 6 &amp; 5 \\ \hline
+\sigma (i) &amp; 0 &amp; 1 &amp; \colorbox{red}{6} &amp; 3 &amp; 4 &amp; \colorbox{green}{7} &amp; \colorbox{blue}{2} &amp; \colorbox{yellow}{5} &amp; 8 \\ \hline
+m &amp; 2 &amp; 4 &amp; \colorbox{red}{15} &amp; 3 &amp; 6 &amp; \colorbox{green}{16} &amp; \colorbox{blue}{15} &amp; \colorbox{yellow}{16} &amp; 11 \\ \hline
+m' &amp; 2 &amp; 4 &amp; \colorbox{blue}{15} &amp; 3 &amp; 6 &amp; \colorbox{yellow}{16} &amp; \colorbox{red}{15} &amp; \colorbox{green}{16} &amp; 11 \\ \hline
+\end{array}
+$$</p>
+<p>This happens because the permutation we have chosen does not contain <em>one</em>
+cycle going through the whole value block, instead the chosen $\sigma$ decomposes
+into two cycles: $(2, 6), (5, 7)$ and so our malicious assignment is invariant
+under the chosen $\sigma$.</p>
+<p>However, if $\sigma$ was chosen to contain one cycle through the whole block,
+that wouldn't be the problem. For example a following cycle $(2 ~ 5 ~ 6 ~ 7)$.
+For more info about cyclic permutations,
+there is <a rel="external" href="https://en.wikipedia.org/wiki/Cyclic_permutation#Basic_properties">this article</a></p>
+<h4 id="why-does-the-protocol-work-and-what-are-those-beta-and-gamma-for">Why does the protocol work and what are those $\beta$ and $\gamma$ for?</h4>
+<p>For the full intuition why those shifts are needed I would refer the reader to
+this <a rel="external" href="https://hackmd.io/@relgabizon/ByFgSDA7D">hackmd</a>, here I will just briefly reiterate over the idea of a grand
+product.</p>
+<p>Imagine we have two sets of numbers</p>
+<p>$$
+\begin{cases}
+a = (a_1, ..., a_n) \\
+b = (b_1, ..., b_n)
+\end{cases}
+$$</p>
+<p>and we want to check if these two sets contain the same elements, possibly
+in different orders. Certainly we do not want to do an honest element-by-element
+check.</p>
+<p>The first idea could be to just check of the product of the elements match:</p>
+<p>$$
+\prod_{i\in [n]} a_i \stackrel{?}{=} \prod_{i\in [n]} b_i,
+$$</p>
+<p>That would successfully prove that $a = (1, 1, 2, 3)$ equals the set
+$b = (3, 2, 1, 1)$ and not equal to $c = (1, 1, 2, 4)$. However, it will also
+prove that $a = (1, 1, 2, 3)$ equals to $m = (1, 1, 1, 6)$.</p>
+<p>But if we were to add a random shift to each value the check would work:</p>
+<p>$$
+\prod_{i\in [n]} (a_i+\gamma) \stackrel{?}{=} \prod_{i\in [n]} (b_i+\gamma)
+$$</p>
+<p>Why exactly is that the case? If we viewed the following as a polynomial over $X$:</p>
+<p>$$
+P(X) = \prod_{i\in [n]} (a_i+ X) - \prod_{i\in [n]} (b_i+ X)
+$$</p>
+<p>then if at a random point $X = \gamma$ this polynomial is zero, by the
+Schwartz-Zippel Lemma either the polynomial is zero everywhere, or we hit one of
+its few roots by chance. So with high probability the sets match.</p>
+<p>Ok, so this is what a random $\gamma$ is for. But what is random $\beta$ for?
+So, $\gamma$ lets us just say that "these multisets are the same", but we still
+need to prove a sort of per-element equation in the structure of $g = \sigma(f)$.</p>
+<p>For example, take the following evaluations of $f$ and $g$, and let $\sigma$
+swap $0$ and $1$:</p>
+<p>$$
+\begin{array}{|c|c|c|}
+\hline
+i &amp; 0 &amp; 1 \\ \hline
+\omega^i &amp; \omega^0 &amp; \omega^1 \\ \hline
+f &amp; 10 &amp; 20 \\ \hline
+g &amp; 10 &amp; 20 \\ \hline
+\sigma(i) &amp; 1 &amp; 0 \\ \hline
+\end{array}
+$$</p>
+<p>As multisets, $f$ and $g$ are equal, so checking only</p>
+<p>$$
+\prod_{i \in [n]} (f_i + \gamma) \stackrel{?}{=}
+\prod_{i \in [n]} (g_i + \gamma)
+$$</p>
+<p>would pass. But this is not enough to prove $g = \sigma(f)$, because
+$\sigma(f) = (20, 10)$. What $\beta$ does is bind every value to its position.
+Instead of comparing just values, we compare value-label pairs compressed into
+one field element:</p>
+<p>$$
+\begin{array}{|c|c|c|}
+\hline
+i &amp; 0 &amp; 1 \\ \hline
+f_i + \beta \cdot i + \gamma
+&amp; 10 + \gamma
+&amp; 20 + \beta + \gamma \\ \hline
+g_i + \beta \cdot \sigma(i) + \gamma
+&amp; 10 + \beta + \gamma
+&amp; 20 + \gamma \\ \hline
+\end{array}
+$$</p>
+<p>$$
+\prod_{i \in [n]} (f_i + \beta \cdot i + \gamma)
+\stackrel{?}{=}
+\prod_{i \in [n]} (g_i + \beta \cdot \sigma(i) + \gamma).
+$$</p>
+<p>In this example these products are not equal as polynomials in $\beta$ and
+$\gamma$, unless the values actually agree with the chosen permutation.</p>
+<h3 id="the-rest-of-the-paper">The rest of the paper</h3>
+<p>The rest of the paper introduces a general case for checking a permutation
+"across" the values of several polynomials $f_1,...,f_k \in \mathbb{F}_{&lt;d}[X]$.</p>
+<p>It is basically a generalization of the ideas above that we need to check
+permutations over all of the three columns of gate evaluations within the
+execution trace. Later, when this is encoded in the PLONK protocol, the paper
+also moves from the $H$ multiplicative subgroup of $\mathbb{F}$ to a union of
+cosets. And then in next parts (6 and 7) the constraint systems and the whole
+protocol are formally
+described. However, for today I would want to make a stop here since
+my main goal was to explain the logic behind the permutation checks as arguably
+this is the least approachable part of the paper. Hope this is helpful to anyone
+and have a great day!</p>
+
+  </div>
+
+	
+
+  <div class="pagination">
+  	
+		<a href="#" class="top">Top</a>
+		
+  </div>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://montekki.github.io"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "https://montekki.github.io/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "PlonK Permutation Check",
+        "item": "https://montekki.github.io/plonk-1/"
+      }
+    ]
+  }
+  </script>
+
+  </main>
+
+  
+  <footer>
+    <span>&copy; <time datetime="2026-06-23T13:59:05.458050640+00:00">2022-2026</time> Fedor Sakharov. </span>
+  </footer>
+  
+</body>
+</html>
