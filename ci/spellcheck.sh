@@ -29,9 +29,8 @@ aspell --version
 # Script skips words with length less than or equal to 3. This helps to avoid
 # some false positives.
 
-# We can consider skipping source code in markdown files (```code```) to reduce
-# rate of false positives, but then we lose ability to detect typos in code
-# comments/strings etc.
+# We skip KaTeX math regions before spellchecking. TeX commands are not prose,
+# and checking them causes false positives such as \mathsf, \stackrel, etc.
 
 shopt -s nullglob
 
@@ -43,6 +42,15 @@ mode="check"
 # aspell repeatedly modifies the personal dictionary for some reason,
 # so we should use a copy of our dictionary.
 dict_path="/tmp/dictionary.txt"
+
+strip_katex() {
+    perl -0pe '
+        s/\x24\x24.*?\x24\x24/ /gs;
+        s/\\\[.*?\\\]/ /gs;
+        s/\\\(.*?\\\)/ /gs;
+        s/(?<!\\)\x24(?!\x24).*?(?<!\\)\x24/ /gs;
+    ' "$1"
+}
 
 if [[ "$1" == "list" ]]; then
     mode="list"
@@ -63,7 +71,9 @@ if [[ ! -f "$dict_filename" ]]; then
     echo "Please check that it doesn't contain any misspellings."
 
     echo "personal_ws-1.1 en 0 utf-8" > "$dict_filename"
-    cat "${markdown_sources[@]}" | aspell -M --ignore 3 list | sort -u >> "$dict_filename"
+    for fname in "${markdown_sources[@]}"; do
+        strip_katex "$fname"
+    done | aspell -M --ignore 3 list | sort -u >> "$dict_filename"
 elif [[ "$mode" == "list" ]]; then
     # List (default) mode: scan all files, report errors.
     declare -i retval=0
@@ -76,7 +86,7 @@ elif [[ "$mode" == "list" ]]; then
     fi
 
     for fname in "${markdown_sources[@]}"; do
-        command=$(aspell -M --ignore 3 --personal="$dict_path" "$mode" < "$fname")
+        command=$(strip_katex "$fname" | aspell -M --ignore 3 --personal="$dict_path" "$mode")
         if [[ -n "$command" ]]; then
             for error in $command; do
                 # FIXME: find more correct way to get line number

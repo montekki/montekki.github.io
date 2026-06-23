@@ -8,6 +8,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v7
+      - name: install_tikz_deps
+        run: sudo apt-get update && sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-pictures dvisvgm mupdf-tools
+      - name: render_tikz
+        run: bash ci/render-tikz.sh
       - name: build_and_deploy
         uses: shalzz/zola-deploy-action@v0.22.1
         env:
