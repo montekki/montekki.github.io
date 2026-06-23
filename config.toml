@@ -40,8 +40,8 @@ url = "about"
 
 [extra.seo]
 image = "assets/favicon.jpg"
-image_height = 512
-image_width = 512
+image_height = 200
+image_width = 200
 og_locale = "en_US"
 
 [extra.footer]

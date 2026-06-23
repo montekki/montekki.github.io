@@ -150,29 +150,29 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "{{ web_type }}",
-  "headline": "{{ og_title }}",
-  "name": "{{ og_title }}",
-  "description": "{{ description }}",
-  "url": "{{ site_url | safe }}",
-  "inLanguage": "{{ config.extra.language_code | default(value="en") }}",
+  "@type": {{ web_type | json_encode() | safe }},
+  "headline": {{ og_title | json_encode() | safe }},
+  "name": {{ og_title | json_encode() | safe }},
+  "description": {{ description | json_encode() | safe }},
+  "url": {{ site_url | json_encode() | safe }},
+  "inLanguage": {{ config.extra.language_code | default(value="en") | json_encode() | safe }},
   "author": {
     "@type": "Person",
-    "name": "{{ author }}",
-    "url": "{{ config.base_url | safe }}",
+    "name": {{ author | json_encode() | safe }},
+    "url": {{ config.base_url | json_encode() | safe }},
     "sameAs": [
-      "{{ config.extra.github | safe }}",
-      "{{ config.extra.linkedin | safe }}"
+      {{ config.extra.github | json_encode() | safe }},
+      {{ config.extra.linkedin | json_encode() | safe }}
     ]
   }
   {% if image %}
-    ,"image": "{{ get_url(path=image) | safe }}"
+    ,"image": {{ get_url(path=image) | json_encode() | safe }}
   {% endif %}
   {% if config.title %}
     ,"publisher": {
       "@type": "Organization",
-      "name": "{{ config.title }}",
-      "url": "{{ config.base_url | safe }}"
+      "name": {{ config.title | json_encode() | safe }},
+      "url": {{ config.base_url | json_encode() | safe }}
     }
   {% endif %}
   {% if page %}
@@ -184,7 +184,7 @@
     {% endif %}
     ,"mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "{{ site_url | safe }}"
+      "@id": {{ site_url | json_encode() | safe }}
     }
   {% endif %}
 }

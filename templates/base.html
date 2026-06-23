@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% block robots %}
   <meta name="robots" content="index,follow,max-image-preview:large">
+  {% endblock robots %}
 
   {% block seo %}
     {%- set site_url = current_url | default(value=get_url(path="404.html")) -%}

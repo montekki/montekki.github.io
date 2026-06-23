@@ -1,8 +1,11 @@
 {% extends "tale-zola/templates/tags/single.html" %}
 
 {% block seo -%}
-  {{ super() }}
-
+  {%- set site_url = current_url | default(value=get_url(path="404.html")) -%}
+  {% set author = config.extra.author | default(value="") -%}
+  {% set image = config.extra.seo.image | default(value="") -%}
+  {% set image_height = config.extra.seo.image_height | default(value=0) -%}
+  {% set image_width = config.extra.seo.image_width | default(value=0) -%}
   {% set og_title = term.name -%}
   {% if config.title -%}
     {% set title = term.name ~ " | " ~ config.title -%}

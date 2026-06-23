@@ -1,6 +1,6 @@
 +++
 title = "Blog"
-description = "Blog posts on zero-knowledge proofs, cryptography, and Rust programming."
+description = "Notes on zero-knowledge proofs, interactive proof protocols, PlonK, polynomial commitments, and Rust implementations."
 template = "blog.html"
 sort_by = "date"
 paginate_by = 5
@@ -9,4 +9,5 @@ paginate_by = 5
 katex = true
 +++
 
-$$ e = j^3 $$
+Notes on zero-knowledge proofs, interactive proof protocols, polynomial
+commitments, and Rust implementations.
