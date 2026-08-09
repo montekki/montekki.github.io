@@ -1,5 +1,26 @@
-{% extends "tale-zola/templates/404.html" %}
+{% extends "base.html" %}
 
 {% block robots %}
   <meta name="robots" content="noindex,follow">
 {% endblock robots %}
+
+{% block seo -%}
+  {% set site_url = get_url(path="404.html") -%}
+  {% set author = config.extra.author | default(value="") -%}
+  {% set description = "The requested page could not be found." -%}
+  {% set image = config.extra.seo.image | default(value="") -%}
+  {% set image_height = config.extra.seo.image_height | default(value=0) -%}
+  {% set image_width = config.extra.seo.image_width | default(value=0) -%}
+  {% set og_title = "404" -%}
+  {% set title = "404 | " ~ config.title -%}
+  {% set web_type = "WebPage" -%}
+  {% include "partials/seo.html" %}
+{%- endblock seo %}
+
+{% block content %}
+<div class="notfound">
+  <h1 class="notfound-error">404: Page not found</h1>
+  <div class="notfound-line"></div>
+  <p class="notfound-message">The page you requested does not exist. <a href="{{ config.base_url | safe }}">Head back home</a>.</p>
+</div>
+{% endblock content %}

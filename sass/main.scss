@@ -1,3 +1,13 @@
+$default-color: var(--color-text);
+$default-shade: var(--color-heading);
+$default-tint: var(--color-muted);
+$grey-1: var(--color-muted);
+$grey-2: var(--color-border);
+$grey-3: var(--color-code-bg);
+$blue: var(--color-link);
+$shadow-color: var(--color-shadow);
+$code-color: var(--color-code);
+
 @import '../themes/tale-zola/sass/tale/variables';
 @import '../themes/tale-zola/sass/tale/base';
 @import '_code.scss';
@@ -16,8 +26,21 @@
 @import url("https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css");
 
 :root {
-  /* Used for: block comment, hr, ... */
-  --border-color: #00000000;
+  color-scheme: light;
+
+  --color-background: #ffffff;
+  --color-text: #555555;
+  --color-heading: #353535;
+  --color-muted: #757575;
+  --color-border: #e5e5e5;
+  --color-link: #2474b5;
+  --color-code-bg: #f4f4f4;
+  --color-code: #a33d48;
+  --color-shadow: rgba(0, 0, 0, 0.2);
+  --color-tag: rgba(0, 0, 0, 0.05);
+  --color-tag-hover: rgba(0, 0, 0, 0.1);
+  --border-color: var(--color-border);
+  --bg-1: var(--color-code-bg);
 
   /* Fonts */
   --text-font: 'Inter';
@@ -25,11 +48,151 @@
   --code-font: 'Jetbrains Mono';
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --color-background: #181a1b;
+    --color-text: #c9c5be;
+    --color-heading: #f0ede8;
+    --color-muted: #a09a91;
+    --color-border: #3b3e40;
+    --color-link: #72b7f0;
+    --color-code-bg: #282a2c;
+    --color-code: #e48b94;
+    --color-shadow: rgba(0, 0, 0, 0.55);
+    --color-tag: rgba(255, 255, 255, 0.08);
+    --color-tag-hover: rgba(255, 255, 255, 0.14);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: #181a1b;
+  --color-text: #c9c5be;
+  --color-heading: #f0ede8;
+  --color-muted: #a09a91;
+  --color-border: #3b3e40;
+  --color-link: #72b7f0;
+  --color-code-bg: #282a2c;
+  --color-code: #e48b94;
+  --color-shadow: rgba(0, 0, 0, 0.55);
+  --color-tag: rgba(255, 255, 255, 0.08);
+  --color-tag-hover: rgba(255, 255, 255, 0.14);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 html {
-  background-color: #00000000;
-  color: #00000000;
+  background-color: var(--color-background);
+  color: var(--color-text);
   font-family: 'Inter';
   line-height: 1.6em;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+.theme-toggle {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  padding: 0.45rem 0.55rem;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--color-heading);
+  border-color: var(--color-muted);
+}
+
+.nav-container {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.nav-container > a {
+  flex-basis: 100%;
+}
+
+.nav ul {
+  margin: 0;
+}
+
+@media (min-width: 600px) {
+  .nav-container {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .nav-container > a {
+    flex: 1;
+  }
+
+  .nav ul {
+    bottom: auto;
+    position: static;
+    right: auto;
+  }
+}
+
+.tags-clouds a {
+  background: var(--color-tag);
+}
+
+.tags-clouds a:hover,
+.tags-clouds a:active {
+  background: var(--color-tag-hover);
+}
+
+// General charts retain a stable light canvas so black axes and their original
+// palettes remain readable. Theme-aware monochrome graphics opt out below.
+.post img:not(.emoji):not(.theme-graphic__image) {
+  background-color: #ffffff;
+}
+
+.theme-graphic {
+  margin: 0 auto 0.5rem;
+  max-width: 100%;
+}
+
+.theme-graphic__image {
+  background: transparent;
+  margin: 0 auto;
+}
+
+.theme-graphic__dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .theme-graphic__light {
+    display: none;
+  }
+
+  :root:not([data-theme]) .theme-graphic__dark {
+    display: block;
+  }
+}
+
+:root[data-theme="dark"] .theme-graphic__light {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-graphic__dark {
+  display: block;
 }
 
 .content {

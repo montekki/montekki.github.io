@@ -24,18 +24,29 @@ for src in "$repo_root"/tikz/*.tex; do
   work_dir="$tmp_dir/$name"
   mkdir -p "$work_dir"
 
-  pdflatex \
-    -interaction=nonstopmode \
-    -halt-on-error \
-    -output-directory="$work_dir" \
-    "$src" >/dev/null
+  for variant in light dark; do
+    if [ "$variant" = "light" ]; then
+      foreground="black"
+    else
+      foreground="white"
+    fi
 
-  dvisvgm \
-    --pdf \
-    --exact \
-    --font-format=woff \
-    --output="$out_dir/$name.svg" \
-    "$work_dir/$name.pdf" >/dev/null
+    job_name="$name-$variant"
 
-  echo "rendered static/generated/$name.svg"
+    pdflatex \
+      -interaction=nonstopmode \
+      -halt-on-error \
+      -jobname="$job_name" \
+      -output-directory="$work_dir" \
+      "\\def\\circuitcolor{$foreground}\\input{$src}" >/dev/null
+
+    dvisvgm \
+      --pdf \
+      --exact \
+      --font-format=woff \
+      --output="$out_dir/$job_name.svg" \
+      "$work_dir/$job_name.pdf" >/dev/null
+
+    echo "rendered static/generated/$job_name.svg"
+  done
 done

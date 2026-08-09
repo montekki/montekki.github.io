@@ -10,8 +10,6 @@ build_search_index = false
 title = "Fedor Sakharov's Blog"
 description = "Articles on zero-knowledge proofs, cryptography, and Rust programming"
 
-theme = "tale-zola"
-
 taxonomies = [
     { name = "tags" },
 ]
