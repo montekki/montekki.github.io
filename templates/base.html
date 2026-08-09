@@ -54,7 +54,7 @@
     {% include "partials/seo.html" %}
   {% endblock seo %}
 
-  <link rel="stylesheet" href="{{ get_url(path="main.css") | safe }}">
+  <link rel="stylesheet" href="{{ get_url(path="main.css") | safe }}?v={{ get_hash(path="main.css", sha_type=256, base64=false) }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
