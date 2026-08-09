@@ -28,6 +28,8 @@
   {% if config.generate_feeds %}
     <link type="application/atom+xml" rel="alternate" href="{{ get_url(path=config.feed_filename | default(value="atom.xml")) | safe }}" title="{{ config.title | default(value="Tale-Zola") }}" />
   {% endif %}
+  <link type="text/plain" rel="alternate" href="{{ get_url(path="llms.txt") | safe }}" title="{{ config.title }} for language models">
+  <link type="application/json" rel="alternate" href="{{ get_url(path=".well-known/agent-skills/index.json") | safe }}" title="Agent skills">
 
   {% if config.extra.google_analytics %}
     <script async src='https://www.google-analytics.com/analytics.js'></script>
@@ -80,5 +82,6 @@
     </span>
   </footer>
   {% endblock footer %}
+  <script src="{{ get_url(path="assets/js/webmcp.js") | safe }}"></script>
 </body>
 </html>

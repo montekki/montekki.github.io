@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "read-fedor-sakharov-blog",
+      "type": "skill-md",
+      "description": "Discover and read Fedor Sakharov's technical articles on zero-knowledge proofs, interactive proofs, polynomial commitments, and Rust.",
+      "url": "https://montekki.github.io/.well-known/agent-skills/read-blog/SKILL.md",
+      "digest": "sha256:f4b7e37b1d611f2baa680d23f4451c11bdd0c3d2b9079d4a2250c63d83f5b146"
+    }
+  ]
+}
